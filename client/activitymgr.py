@@ -70,12 +70,12 @@ class ActivityMgr(QtCore.QObject):
     def _loadList(self):
         activity = Activity()
         dbquery = self.main_basium.query().order(activity.q.name)
-        response = self.main_basium.load(dbquery)
-        if response.isError():
-            self.log.error("Cannot load activitylist from local database, %s" % response.getError())
+        data, status = self.main_basium.load(dbquery)
+        if not status.ok():
+            self.log.error("Cannot load activitylist from local database, %s" % status.getError())
             return
         self.activities.clear()
-        for activity in response.data:
+        for activity in data:
             self.activities.append(activity)
 
     def getList(self):
@@ -99,19 +99,19 @@ class ActivityMgr(QtCore.QObject):
     def _do_sync(self):
         a = Activity()
         query = self.remote_basium.query(a)
-        response = self.remote_basium.load(query)
-        if response.isError():
+        data, status = self.remote_basium.load(query)
+        if status.isError():
             self.log.error("Cannot load list of activities from server")
         
-        for srv_activity in response.data:
+        for srv_activity in data:
             query = self.basium.query().filter(a.q.server_id, "=", srv_activity._id)
-            response = self.basium.load(query)
-            if response.isError():
-                self.log.error("Can't load local activity %s" % response.getError())
+            data, status = self.basium.load(query)
+            if status.isError():
+                self.log.error("Can't load local activity %s" % status.getError())
                 return
-            if len(response.data) > 0:
+            if len(data) > 0:
                 # we have the report locally, check if changed
-                local_activity = response.data[0]
+                local_activity = data[0]
                 if local_activity.name != srv_activity.name or local_activity.active != srv_activity.active:
                     srv_activity.server_id = srv_activity._id
                     srv_activity._id = local_activity._id

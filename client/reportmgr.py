@@ -70,12 +70,12 @@ class ReportMgr(QtCore.QObject):
                 return report
         report = Report()
         report._id = _id
-        response = self.main_basium.load(report)
-        if response.isError():
-            self.log.error("Cant load report with _id %s from local database %s" % (_id, response.getError()))
+        data, status = self.main_basium.load(report)
+        if status.isError():
+            self.log.error("Cant load report with _id %s from local database %s" % (_id, status.getError()))
             return None
-        if len(response.data) > 0:
-            return response.data[0]
+        if len(data) > 0:
+            return data[0]
         return None
 
     def getList(self, start=None):
@@ -83,12 +83,12 @@ class ReportMgr(QtCore.QObject):
         query = self.main_basium.query(r)
         stop = start + datetime.timedelta(days=1)
         query.filter(r.q.start, ">=", start).filter(r.q.start, "<", stop).order(r.q.start)
-        response = self.main_basium.load(query)
+        data, status = self.main_basium.load(query)
         self.reports.clear()
-        if response.isError():
-            self.log.error("Cannot load list of reports from local database %s" % response.getError())
+        if status.isError():
+            self.log.error("Cannot load list of reports from local database %s" % status.getError())
         else:
-            for r in response.data:
+            for r in data:
                 self.reports.append(r)
         
         return self.reports
@@ -181,11 +181,11 @@ the trigger is configured like this
         self.log.debug("Send reports marked for deletion in local database, to server")
         r = Report()
         query = self.local_db.query().filter(r.q.deleted, "=", True)
-        response = self.local_db.load(query)
-        if response.isError():
-            self.log.error("Can't load reports marked for deletion from local database %s" % response.getError())
+        data, status = self.local_db.load(query)
+        if status.isError():
+            self.log.error("Can't load reports marked for deletion from local database %s" % status.getError())
             return
-        for report in response.data:
+        for report in data:
             self.log.debug("Marking report on server as deleted %s" % report)
             report._id = report.server_id
             response = self.srv_db.store(report)
@@ -197,11 +197,11 @@ the trigger is configured like this
         self.log.debug("Send new reports in local database, to server")
         r = Report()
         query = self.local_db.query().filter(r.q.server_id, "<", 0)
-        response = self.local_db.load(query)
-        if response.isError():
-            self.log.error("Can't load new reports from local database %s" % response.getError())
+        data, status = self.local_db.load(query)
+        if status.isError():
+            self.log.error("Can't load new reports from local database %s" % status.getError())
             return
-        for local_report in response.data:
+        for local_report in data:
             self.log.debug("Sending new report to server %s" % local_report)
             _id = local_report._id
             local_report._id = -1
@@ -220,11 +220,11 @@ the trigger is configured like this
         self.log.debug("Send updated reports in local database, to server")
         r = Report()
         query = self.local_db.query().filter(r.q.updated, "=", True).filter(r.q.server_id, "!=", None)
-        local_response = self.local_db.load(query)
-        if local_response.isError():
-            self.log.error("Error loading local updated reports %s" % local_response.getError())
+        local_data, local_status = self.local_db.load(query)
+        if local_status.isError():
+            self.log.error("Error loading local updated reports %s" % local_status.getError())
             return
-        for local_report in local_response.data:
+        for local_report in local_data:
             self.log.debug("Updating report on server %s" % local_report)
             local_report._id = local_report.server_id
             srv_response = self.srv_db.store(local_report)
@@ -243,12 +243,12 @@ the trigger is configured like this
         # first, get highest modified seq number from local database
         query = self.local_db.query()
         query.order(r.q.seq, desc=True).limit(rowcount=1)
-        local_response = self.local_db.load(query)
-        if local_response.isError():
-            self.log.error("Error getting highest seq from local database %s" % local_response.getError())
+        local_data, local_status = self.local_db.load(query)
+        if local_status.isError():
+            self.log.error("Error getting highest seq from local database %s" % local_status.getError())
             return
-        if len(local_response.data) > 0:
-            local_max_seq = local_response.data[0].seq
+        if len(local_data) > 0:
+            local_max_seq = local_data[0].seq
             modified = None
         else:
             local_max_seq = 0
@@ -267,28 +267,28 @@ the trigger is configured like this
             srv_query.order(r.q._id)
             srv_query.limit(offset=offset, rowcount=step)
             self.log.debug("query " + srv_query.encode())
-            srv_response = self.srv_db.load(srv_query)
-            if srv_response.isError():
-                self.log.error("Can't get Error getting modified timestamp %s" % srv_response.getError())
+            srv_data, srv_status = self.srv_db.load(srv_query)
+            if srv_status.isError():
+                self.log.error("Can't get Error getting modified timestamp %s" % srv_status.getError())
                 break
 
-            if len(srv_response.data) < 1:
+            if len(srv_data) < 1:
                 break   # no more data
 
 
             self.log.debug("------------------------------- offset %d" % offset)
-            for srv_report in srv_response.data:
+            for srv_report in srv_data:
                 self.log.debug("From server, report with _id %s" % srv_report._id)
                 local_query = self.local_db.query()
                 local_query.filter(r.q.server_id, "=", srv_report._id)
-                local_response = self.local_db.load(local_query)
-                if local_response.isError():
-                    self.log.error("Can't load report from local database %s" % local_response.getError())
+                local_data, local_status = self.local_db.load(local_query)
+                if local_status.isError():
+                    self.log.error("Can't load report from local database %s" % local_status.getError())
                     error = True
                     break
-                if len(local_response.data) > 0:
+                if len(local_data) > 0:
                     # we have report in local database
-                    local_report = local_response.data[0]
+                    local_report = local_data[0]
                     
                     if srv_report.deleted:
                         # report is marked as deleted on server, remove locally
@@ -325,12 +325,12 @@ the trigger is configured like this
             # just get any report from local database, and set seq
             query = self.local_db.query()
             query.order(r.q.seq, desc=True).limit(rowcount=1)
-            local_response = self.local_db.load(query)
-            if local_response.isError():
-                self.log.error("Can't get highest seq from local database %s" % local_response.getError())
+            local_data, local_status = self.local_db.load(query)
+            if local_status.isError():
+                self.log.error("Can't get highest seq from local database %s" % local_status.getError())
                 return
-            if len(local_response.data) > 0:
-                local_report = local_response.data[0]
+            if len(local_data) > 0:
+                local_report = local_data[0]
                 if local_report.seq < setMaxLocalSeq:
                     local_report.seq = setMaxLocalSeq
                     local_response2 = self.local_db.store(local_report)
