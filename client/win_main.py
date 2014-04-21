@@ -611,13 +611,15 @@ class Win_Main(QtGui.QMainWindow, ui_main.Ui_Main):
         if self.selectedReport.changed:
             self.log.warning("Current report changed, please save/cancel first")
         else:
-            self._updateGuiReport(None)
+            self.tableReports.clearSelection()
+            d = self.selectedDate.date().toPython()
+            r = Report()
+            r.server_id = -1
+            r.start = datetime.datetime.combine(d, datetime.datetime.now().time())
+            r.stop = r.start + datetime.timedelta(seconds=30*60)
+            self._updateGuiReport(r)
             self.selectedReport.setStateNew()
-            d = QtCore.QDateTime.currentDateTime()
-            d = d.addMSecs(0 - d.time().msec())
-            d.setDate(self.selectedDate.date())
-            self.dtReportStart.setDateTime(d)
-            self.dtReportStop.setDateTime(d)
+
     
     def reportRemove(self):
         if self.selectedReport.changed:
