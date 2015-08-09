@@ -3,7 +3,6 @@
 	<name>ergotime</name>
 	<comment></comment>
 	<projects>
-		<project>basium</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

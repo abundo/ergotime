@@ -28,15 +28,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+
 import basium_model
 
-class Report(basium_model.Model):
-    user_id = basium_model.IntegerCol()
-    activityid = basium_model.IntegerCol()
-    start = basium_model.DateTimeCol()
-    stop = basium_model.DateTimeCol()
-    comment = basium_model.VarcharCol()
+import common.activity as common_activity
 
-    modified = basium_model.DateTimeCol()
-    seq = basium_model.IntegerCol()
-    deleted = basium_model.BooleanCol()
+class Activity(common_activity.Activity):
+    server_id = basium_model.IntegerCol()  # server assigned id

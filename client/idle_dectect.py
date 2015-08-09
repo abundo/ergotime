@@ -1,4 +1,10 @@
-"""Idle detector for Windows platform"""
+"""
+Idle detector
+
+Platform support:
+- Windows
+- Todo Linux
+"""
 
 from ctypes import Structure, windll, c_uint, sizeof, byref
 
@@ -9,9 +15,10 @@ class LASTINPUTINFO(Structure):
     ]
 
 def getIdle():
+    """Returns idle time in seconds"""
     windll.user32.GetLastInputInfo(byref(lastInputInfo))
     millis = windll.kernel32.GetTickCount() - lastInputInfo.dwTime
-    return millis / 1000.0
+    return millis // 1000
 
 
 lastInputInfo = LASTINPUTINFO()

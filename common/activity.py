@@ -31,6 +31,5 @@
 import basium_model
 
 class Activity(basium_model.Model):
-    server_id = basium_model.IntegerCol()  # server assigned id
     name = basium_model.VarcharCol()
     active = basium_model.BooleanCol()

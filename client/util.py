@@ -28,36 +28,38 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
-import os.path
-import builtins
+
+import os
+import basium
 
 from myglobals import *
+from logger import log
+from settings import sett
 
-import sys
-import encodings.idna   # make sure cxfreeze includes the module
+from model.activity import Activity
+from model.report import Report
+from model.users import Users
 
-import PyQt5.QtWidgets as QtWidgets
+def openLocalDatabase():
+    dbconf = basium.DbConf(database=localDatabaseName, log=log)
+    log.debugf(DEBUG_FILES, "Opening local database %s" % (dbconf.database))
+    db = basium.Basium(logger=log, driver="sqlite", checkTables=True, dbconf=dbconf)
+    db.addClass(Activity)
+    db.addClass(Report)
+    db.addClass(Users)
+    if not db.start():
+        log.error("Cannot open local database, very limited functionality")
+        return None, None   # todo exception
+    return dbconf, db
 
-sys.path.insert(0, "d:/hack/git/basium")
-#sys.path.insert(0, "./basium")
-
-import main
-
-
-def main_():
-    app = QtWidgets.QApplication(sys.argv)
-    
-    app.setQuitOnLastWindowClosed(False);
-    app.setOrganizationName("Abundo AB");
-    app.setOrganizationDomain("abundo.se");
-    app.setApplicationName("ErgoTime");
-
-    w_main = main.MainWin()
-    try:
-        w_main.show()
-        sys.exit( app.exec_() )
-    except:
-        print("Error:")
-
-if __name__ == '__main__':
-    main_()
+def openRemoteDatabase(databaseName=None):
+    dbconf = basium.DbConf(host=sett.server_url, database="ergotime", log=log) # username="", password=""
+    log.debugf(DEBUG_FILES, "Opening remote database %s on %s" % (dbconf.database, dbconf.host))
+    db = basium.Basium(logger=log, driver="json", checkTables=False, dbconf=dbconf)
+    db.addClass(Activity)
+    db.addClass(Report)
+    db.addClass(Users)
+    if not db.start():
+        log.error("Cannot open ergotime database on remote server, sync aborted")
+        return None, None   # todo exception
+    return dbconf, db

@@ -33,50 +33,56 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import queue
 import threading
 
-import PySide.QtCore as QtCore
+import PyQt5.QtCore as QtCore
+
+from myglobals import *
+from logger import log
+from settings import sett
+
+import util
 
 import basium
-from activity import Activity
+from model.activity import Activity
 
-ergotimeserver="http://ergotime.int.abundo.se:8000"
-debug = False
-
-class Communicate(QtCore.QObject):
-    updated = QtCore.Signal()
 
 class ActivityMgr(QtCore.QObject):
-    def __init__(self, log=None, basium=None):
-        self.log = log
-        self.main_basium = basium
+    sig = QtCore.pyqtSignal()
+    
+    def __init__(self, main_db=None):
+        super().__init__()
+        self.main_db = main_db
+        
         self.activities = []
+        self.activities_id = {}
         self.toThreadQ = queue.Queue()
         self.t = threading.Thread(target=self.run)
+        self.t.setName("ActivityMGR")
         self.t.daemon = True
         self.t.start()
         
-        self.sig = Communicate()
-
     # Load the list of activities from local db
     def init(self):
         self._loadList()
-        self.sig.updated.emit()
+        self.sig.emit()
 
     def get(self, activityid):
-        for a in self.activities:
-            if a.server_id == activityid:
-                return a
+        if activityid in self.activities_id:
+            return self.activities_id[activityid]
         return None
 
     def _loadList(self):
         activity = Activity()
-        dbquery = self.main_basium.query().order(activity.q.name)
-        data, status = self.main_basium.load(dbquery)
-        if not status.ok():
-            self.log.error("Cannot load activitylist from local database, %s" % status.getError())
+        dbquery = self.main_db.query().order(activity.q.name)
+        try:
+            data = self.main_db.load(dbquery)
+        except basium.Error as err:
+            log.error("Cannot load activitylist from local database, %s" % err)
             return
         self.activities.clear()
+        self.activities_id.clear()
         for activity in data:
             self.activities.append(activity)
+            self.activities_id[activity.server_id] = activity
 
     def getList(self):
         return self.activities
@@ -86,11 +92,13 @@ class ActivityMgr(QtCore.QObject):
         self.toThreadQ.put("sync")
 
     def save(self):
-        self.log.debug("Saving activities")
+        log.debugf(DEBUG_ACTIVITYMGR, "Saving activities")
         for a in self.activities:
-            self.log.debug("Storing activity %s" % a.name)
-            resp = self.basium.store(a)
-            self.log.debug("  %s" % resp.getError())
+            log.debugf(DEBUG_ACTIVITYMGR, "Storing activity %s" % a.name)
+            try:
+                self.basium.store(a)
+            except basium.Error as err:
+                log.error("Cant save activity in local database %s" % err)
         
 
     def stop(self):
@@ -98,64 +106,68 @@ class ActivityMgr(QtCore.QObject):
 
     def _do_sync(self):
         a = Activity()
-        query = self.remote_basium.query(a)
-        data, status = self.remote_basium.load(query)
-        if status.isError():
-            self.log.error("Cannot load list of activities from server")
-        
+        query = self.remote_db.query(a)
+        try:
+            data = self.remote_db.load(query)
+        except basium.Error as err:
+            log.error("Cannot load list of activities from server %s" % err)
+            return
+
         for srv_activity in data:
+            # logger.global("Server activity %s" % srv_activity)
             query = self.basium.query().filter(a.q.server_id, "=", srv_activity._id)
-            data, status = self.basium.load(query)
-            if status.isError():
-                self.log.error("Can't load local activity %s" % status.getError())
+            try:
+                data2 = self.basium.load(query)
+            except basium.Error as err:
+                log.error("Can't load local activity %s" % err)
                 return
-            if len(data) > 0:
+            if len(data2) > 0:
                 # we have the report locally, check if changed
-                local_activity = data[0]
+                local_activity = data2[0]
                 if local_activity.name != srv_activity.name or local_activity.active != srv_activity.active:
-                    srv_activity.server_id = srv_activity._id
-                    srv_activity._id = local_activity._id
-                    response = self.basium.store(srv_activity)
-                    if response.isError():
-                        self.log.error("Cannot update local activity %s" % response.getError())
+                    log.debugf(DEBUG_ACTIVITYMGR, "Updating local copy of activity")
+                    local_activity.name = srv_activity.name
+                    local_activity.server_id = srv_activity._id
+                    local_activity.active = srv_activity.active
+                    try:
+                        self.basium.store(local_activity)
+                    except basium.Error as err:
+                        log.error("Cannot update local activity %s" % err)
                         return
             else:
                 # new activity
+                log.debugf(DEBUG_ACTIVITYMGR, "New activity '%s' on server, storing in local database" % srv_activity.name)
                 srv_activity.server_id = srv_activity._id
                 srv_activity._id = -1
-                response = self.basium.store(srv_activity)
-                if response.isError():
-                    self.log.error("Cannot store new activity in local database %s" % response.getError())
+                try:
+                    self.basium.store(srv_activity)
+                except basium.Error as err:
+                    log.error("Cannot store new activity in local database %s" % err)
                     return
 
         self._loadList()
-        self.sig.updated.emit()
+        self.sig.emit()
         
     
     def run(self):
-        self.log.debug("Starting activitymgr thread")
-        
-        # connect to database, we have a separate connection in this thread to 
-        # simplify database operations
-        self.dbconf = basium.DbConf(database="d:/temp/ergotime/ergotime.db", log=self.log)
-        self.log.debug("ActivityMgr thread, Opening local database %s" % self.dbconf.database)
-        self.basium = basium.Basium(driver="sqlite", checkTables=False, dbconf=self.dbconf)
-        if not self.basium.start():
-            self.log.error("ActivityMgr thread, Cannot open local database, very limited functionality")
-
-        self.remote_dbconf = basium.DbConf(host=ergotimeserver, database="ergotime", log=self.log) # username="", password=""
-        self.remote_basium = basium.Basium(driver="json", checkTables=False, dbconf=self.remote_dbconf)
-        if not self.remote_basium.start():
-            self.log.error("ReportMgr thread, Cannot start basium to remote server")
+        log.debugf(DEBUG_ACTIVITYMGR, "Starting activitymgr thread")
         
         while True:
             req = self.toThreadQ.get()
-            self.log.debug("activitymgr, request=%s" % req)
+            log.debugf(DEBUG_ACTIVITYMGR, "activitymgr, request=%s" % req)
             if req == "quit":
-                self.log.debug("activitymgr thread stopping")
+                log.debugf(DEBUG_ACTIVITYMGR, "activitymgr thread stopping")
                 return
             elif req == "sync":
-                self._do_sync()
-            else:
-                self.log.error("activitymgr thread, unknown command %s" % req)
                 
+                # connect to database, we have a separate connection in this thread to 
+                # simplify database operations
+                tmp, self.basium = util.openLocalDatabase()
+                tmp, self.remote_db = util.openRemoteDatabase()
+
+                self._do_sync()
+
+#                self.srv_db.close()        # when basium supports close()
+#                self.local_db.close()      # when basium supports close()
+            else:
+                log.error("activitymgr thread, unknown command %s" % req)

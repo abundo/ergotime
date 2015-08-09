@@ -27,13 +27,6 @@
        <string>General</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="3" column="2">
-        <widget class="QLineEdit" name="txtIdletimeout">
-         <property name="inputMask">
-          <string>00000</string>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
@@ -70,11 +63,12 @@
          </property>
         </spacer>
        </item>
-       <item row="4" column="2">
-        <widget class="QLineEdit" name="txtDatabasedir"/>
-       </item>
        <item row="5" column="2">
-        <widget class="QComboBox" name="comboLoglevel"/>
+        <widget class="QComboBox" name="comboLoglevel">
+         <property name="editable">
+          <bool>false</bool>
+         </property>
+        </widget>
        </item>
        <item row="5" column="0">
         <widget class="QLabel" name="label_5">
@@ -133,7 +127,27 @@
         </widget>
        </item>
        <item row="2" column="2">
-        <widget class="QLineEdit" name="txtPassword"/>
+        <widget class="QLineEdit" name="txtPassword">
+         <property name="toolTip">
+          <string>If empty, user will be prompted for the password</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QSpinBox" name="spinIdleTimeout">
+         <property name="accelerated">
+          <bool>true</bool>
+         </property>
+         <property name="maximum">
+          <number>3600</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2" colspan="2">
+        <widget class="QLineEdit" name="txtDatabasedir"/>
        </item>
       </layout>
      </widget>
@@ -142,13 +156,6 @@
        <string>Activity</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Periodic sync interval</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="2">
         <spacer name="horizontalSpacer_2">
          <property name="orientation">
@@ -162,10 +169,10 @@
          </property>
         </spacer>
        </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="txtActivitySyncInterval">
-         <property name="inputMask">
-          <string>00000</string>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Periodic sync interval</string>
          </property>
         </widget>
        </item>
@@ -182,6 +189,16 @@
          </property>
         </spacer>
        </item>
+       <item row="0" column="1">
+        <widget class="QSpinBox" name="spinActivitySyncInterval">
+         <property name="toolTip">
+          <string>If zero, disabled</string>
+         </property>
+         <property name="maximum">
+          <number>86400</number>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tab_3">
@@ -189,6 +206,13 @@
        <string>Report</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Periodic sync interval</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="2">
         <spacer name="horizontalSpacer_3">
          <property name="orientation">
@@ -201,13 +225,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_8">
-         <property name="text">
-          <string>Periodic sync interval</string>
-         </property>
-        </widget>
        </item>
        <item row="1" column="0">
         <spacer name="verticalSpacer_3">
@@ -223,9 +240,12 @@
         </spacer>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="txtReportSyncInterval">
-         <property name="inputMask">
-          <string>00000</string>
+        <widget class="QSpinBox" name="spinReportSyncInterval">
+         <property name="toolTip">
+          <string>If zero, disabled</string>
+         </property>
+         <property name="maximum">
+          <number>86400</number>
          </property>
         </widget>
        </item>
@@ -236,9 +256,6 @@
        <string>Network</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="txtServerUrl"/>
-       </item>
        <item row="0" column="0">
         <widget class="QLabel" name="label_9">
          <property name="text">
@@ -246,7 +263,30 @@
          </property>
         </widget>
        </item>
+       <item row="1" column="2">
+        <widget class="QSpinBox" name="spinNetworkTimeout">
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>180</number>
+         </property>
+         <property name="value">
+          <number>60</number>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Timeout</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
         <spacer name="verticalSpacer_4">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -258,6 +298,22 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="1" column="3">
+        <spacer name="horizontalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="2" colspan="2">
+        <widget class="QLineEdit" name="txtServerUrl"/>
        </item>
       </layout>
      </widget>
@@ -300,11 +356,8 @@
   <tabstop>comboFont</tabstop>
   <tabstop>txtUsername</tabstop>
   <tabstop>txtPassword</tabstop>
-  <tabstop>txtIdletimeout</tabstop>
   <tabstop>txtDatabasedir</tabstop>
   <tabstop>comboLoglevel</tabstop>
-  <tabstop>txtActivitySyncInterval</tabstop>
-  <tabstop>txtReportSyncInterval</tabstop>
   <tabstop>txtServerUrl</tabstop>
   <tabstop>btnOk</tabstop>
   <tabstop>btnCancel</tabstop>

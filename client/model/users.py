@@ -30,13 +30,9 @@
 
 import basium_model
 
-class Report(basium_model.Model):
-    user_id = basium_model.IntegerCol()
-    activityid = basium_model.IntegerCol()
-    start = basium_model.DateTimeCol()
-    stop = basium_model.DateTimeCol()
-    comment = basium_model.VarcharCol()
+import common.users as common_users
 
-    modified = basium_model.DateTimeCol()
-    seq = basium_model.IntegerCol()
-    deleted = basium_model.BooleanCol()
+class Users(common_users.Users):
+    name = basium_model.VarcharCol()
+    password = basium_model.VarcharCol()
+    active = basium_model.BooleanCol()
