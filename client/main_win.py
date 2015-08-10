@@ -307,6 +307,7 @@ class Ui_Main(object):
         self.txtLog.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
         self.txtLog.setReadOnly(True)
         self.txtLog.setTextInteractionFlags(QtCore.Qt.TextSelectableByKeyboard|QtCore.Qt.TextSelectableByMouse)
+        self.txtLog.setMaximumBlockCount(5000)
         self.txtLog.setObjectName("txtLog")
         self.horizontalLayout.addWidget(self.txtLog)
         self.verticalLayout.addWidget(self.splitter_2)
