@@ -246,7 +246,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
 
     def settingsUpdated(self):
         log.debugf(DEBUG_MAINWIN, "settingsUpdated")
-        font = QFont(sett.fontName)
+        font = QFont(sett.fontName, int(sett.fontSize))
         self.setFont(font)
         QGuiApplication.setFont(font)
         

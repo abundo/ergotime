@@ -29,11 +29,18 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         self.comboLoglevel.addItem("DEBUG")
         self.comboLoglevel.addItem("CONSOLE")
         
+        self.comboFontSize.addItems(
+            ['6','7','8','9','10','11','12','13','14',
+             '15','16','18','20','22','24','26','28',
+             '32','36','40','44','48','54','60','66',
+             '72','80','88','96'])
+        
         # Copy from settings -> GUI
 
         # ----- general
         
-        self.comboFont.setFont(QFont(sett.fontName))
+        self.comboFontName.setFont(QFont(sett.fontName))
+        self.comboFontSize.setCurrentIndex(self.comboFontSize.findText(sett.fontSize))
         self.txtUsername.setText(sett.username)
         self.txtPassword.setText("<Not displayed>")
         self.spinIdleTimeout.setValue(sett.idle_timeout)
@@ -61,9 +68,9 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         
         # ----- tab general
         
-        font = self.comboFont.currentFont().toString().split(",")
+        font = self.comboFontName.currentFont().toString().split(",")
         sett.fontName = font[0]
-        sett.fontSize = font[1]
+        sett.fontSize = self.comboFontSize.itemText(self.comboFontSize.currentIndex())
         sett.username = self.txtUsername.text()
         sett.password = self.txtPassword.text()
         sett.idle_timeout = self.spinIdleTimeout.value()

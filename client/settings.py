@@ -31,7 +31,7 @@ class MySettings(QtCore.QObject):
     main_win_splitter_2    = AttrTypDefault(QByteArray, NO_DEFAULT)
     
     fontName               = AttrTypDefault(str, "MS Shell Dlg 2")
-    fontSize               = AttrTypDefault(int, 8.25)
+    fontSize               = AttrTypDefault(str, "9")
     username               = AttrTypDefault(str, getpass.getuser())
     password               = AttrTypDefault(str, "")
     idle_timeout           = AttrTypDefault(int, 600)
