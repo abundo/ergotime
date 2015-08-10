@@ -269,7 +269,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
     # ########################################################################
     
     def _initLog(self):
-        #self.txtLog.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.txtLog.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.txtLog.customContextMenuRequested.connect(self.handleLogMenu)
         
     def handleLogMenu(self, pos):
