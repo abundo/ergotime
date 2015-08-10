@@ -35,6 +35,7 @@ import enum
 import PyQt5.QtCore as QtCore
 import PyQt5.QtGui as QtGui
 import PyQt5.QtWidgets as QtWidgets
+from PyQt5.Qt import QFont, QGuiApplication
 
 from common.activity import Activity
 from common.report import Report
@@ -86,6 +87,8 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.timetracker = None
         self.activitymgr = None
         self.reportmgr = None
+
+        self.settingsUpdated()
 
         self._myStatusBar = MyStatusBar(self)
 
@@ -142,6 +145,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self._ReportsSetSelectedDateToday()
         
         self.actionSave_windows_position.triggered.connect(self._saveWindowPosition)
+        sett.updated.connect(self.settingsUpdated)
 
     def settingsDialog(self):
         o = options.OptionsWin(self)
@@ -239,6 +243,13 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.timeCurrentLen.setTime(status.length)
         self._myStatusBar.idle = "Idle %s" % status.idle
 
+
+    def settingsUpdated(self):
+        log.debugf(DEBUG_MAINWIN, "settingsUpdated")
+        font = QFont(sett.fontName)
+        self.setFont(font)
+        QGuiApplication.setFont(font)
+        
 
     # ########################################################################
     #

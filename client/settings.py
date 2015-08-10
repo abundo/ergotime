@@ -21,14 +21,17 @@ class AttrTypDefault:
         self.default = default
 
 
-class MySettings:
+class MySettings(QtCore.QObject):
+
+    updated = QtCore.pyqtSignal()
     
     main_win_pos           = AttrTypDefault(QtCore.QPoint, QtCore.QPoint(100,100))
     main_win_size          = AttrTypDefault(QtCore.QSize, QtCore.QSize(600,400))
     main_win_splitter_1    = AttrTypDefault(QByteArray, NO_DEFAULT)
     main_win_splitter_2    = AttrTypDefault(QByteArray, NO_DEFAULT)
     
-    #font
+    fontName               = AttrTypDefault(str, "MS Shell Dlg 2")
+    fontSize               = AttrTypDefault(int, 8.25)
     username               = AttrTypDefault(str, getpass.getuser())
     password               = AttrTypDefault(str, "")
     idle_timeout           = AttrTypDefault(int, 600)
@@ -53,6 +56,7 @@ class MySettings:
             #    yield var, tmp
 
     def __init__(self):
+        super().__init__()
         self._settings = {}
         self.qsettings = QtCore.QSettings(userconffile, QtCore.QSettings.IniFormat)
         self.qsettings.setFallbacksEnabled(False)
@@ -74,13 +78,13 @@ class MySettings:
 
     def __setattr__(self, attr, value):
         try:
-            atd = self._setting[attr]
+            atd = self._settings[attr]
             log.debugf(DEBUG_SETTINGS, "Storing setting %s,%s = %s" % (attr, str(atd.type), value))
             if value != atd.default or value != getattr(self, attr):    # only write non-default values
                 self.qsettings.setValue(attr, value)
                 object.__setattr__(self, attr, value)
                 return
-        except (ValueError, AttributeError):
+        except (ValueError, AttributeError, KeyError):
             object.__setattr__(self, attr, value)
 
     def contains(self, attr):
@@ -91,6 +95,8 @@ class MySettings:
     
     def sync(self):
         self.qsettings.sync()
+        self.updated.emit()
+
 
 sett = MySettings()
 

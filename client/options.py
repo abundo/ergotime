@@ -5,21 +5,19 @@ Created on 13 nov 2013
 '''
 
 import PyQt5.QtCore as QtCore
-#import PyQt5.QtGui as QtGui
+# import PyQt5.QtGui as QtGui
 import PyQt5.QtWidgets as QtWidgets
+from PyQt5.Qt import QGuiApplication, QFont
 
 import options_win
-import settings
 
 from myglobals import *
 from logger import log
 from settings import sett
-# sett = settings.sett
+
 
 class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
     
-    updated = QtCore.pyqtSignal()
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -35,7 +33,7 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
 
         # ----- general
         
-        # font
+        self.comboFont.setFont(QFont(sett.fontName))
         self.txtUsername.setText(sett.username)
         self.txtPassword.setText("<Not displayed>")
         self.spinIdleTimeout.setValue(sett.idle_timeout)
@@ -63,7 +61,9 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         
         # ----- tab general
         
-        # sett.font = self.font()
+        font = self.comboFont.currentFont().toString().split(",")
+        sett.fontName = font[0]
+        sett.fontSize = font[1]
         sett.username = self.txtUsername.text()
         sett.password = self.txtPassword.text()
         sett.idle_timeout = self.spinIdleTimeout.value()
@@ -83,7 +83,6 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         sett.sync()
 
         self.accept()
-        self.updated.emit()
       
     def cancel(self):
         log.debugf(DEBUG_OPTIONS, "cancel, no settings saved")
