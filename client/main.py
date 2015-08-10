@@ -126,6 +126,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.systray = systray.Systray(timetracker=self.timetracker, activitymgr=self.activitymgr)
 
         self._initMenu()
+        self._initLog()
         self._initActivity()
         self._initCurrentReport()
         self._initReports()
@@ -260,7 +261,24 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
 
         # Help, about
         self.actionAbout.triggered.connect(self.about)
+
+    # ########################################################################
+    #
+    #   Log
+    #
+    # ########################################################################
     
+    def _initLog(self):
+        #self.txtLog.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.txtLog.customContextMenuRequested.connect(self.handleLogMenu)
+        
+    def handleLogMenu(self, pos):
+        menu = QtWidgets.QMenu(self)
+        clearAction = menu.addAction("Clear")
+        action = menu.exec_(QtGui.QCursor.pos())
+        if action == clearAction:
+            self.txtLog.clear()
+            log.debugf(DEBUG_MAINWIN, "Log cleared()")
 
     # ########################################################################
     #
