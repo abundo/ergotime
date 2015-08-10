@@ -36,7 +36,7 @@ from myglobals import *
 from logger import log
 from settings import sett
 
-from model.report import Report
+from common.report import Report
 
 import idle_dectect
 

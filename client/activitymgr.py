@@ -42,7 +42,7 @@ from settings import sett
 import util
 
 import basium
-from model.activity import Activity
+from common.activity import Activity
 
 
 class ActivityMgr(QtCore.QObject):

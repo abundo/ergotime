@@ -36,9 +36,10 @@ from myglobals import *
 from logger import log
 from settings import sett
 
-from model.activity import Activity
-from model.report import Report
-from model.users import Users
+from common.activity import Activity
+from common.report import Report
+from common.users import Users
+
 
 def openLocalDatabase():
     dbconf = basium.DbConf(database=localDatabaseName, log=log)

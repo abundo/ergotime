@@ -40,3 +40,6 @@ class Report(basium_model.Model):
     modified = basium_model.DateTimeCol()
     seq = basium_model.IntegerCol()
     deleted = basium_model.BooleanCol()
+
+    server_id = basium_model.IntegerCol()       # used on client, _id on server
+    updated = basium_model.BooleanCol()         # used on client, indicates local updates need sync

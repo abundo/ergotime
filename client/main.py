@@ -36,9 +36,9 @@ import PyQt5.QtCore as QtCore
 import PyQt5.QtGui as QtGui
 import PyQt5.QtWidgets as QtWidgets
 
-from model.activity import Activity
-from model.report import Report
-from model.users import Users
+from common.activity import Activity
+from common.report import Report
+from common.users import Users
 
 import util
 import options

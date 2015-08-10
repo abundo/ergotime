@@ -43,7 +43,7 @@ from settings import sett
 import util
 
 import basium
-from model.report import Report
+from common.report import Report
 
 
 class ReportMgr(QtCore.QObject):
