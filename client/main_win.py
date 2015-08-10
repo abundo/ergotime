@@ -356,7 +356,6 @@ class Ui_Main(object):
         self.menuEdit.addAction(self.actionSave_windows_position)
         self.menuActivity.addAction(self.actionActivitySync)
         self.menuReport.addAction(self.actionReportSync)
-        self.menuHelp.addAction(self.actionDocumentation)
         self.menuHelp.addAction(self.actionAbout)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
