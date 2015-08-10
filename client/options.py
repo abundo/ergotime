@@ -86,7 +86,7 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         self.updated.emit()
       
     def cancel(self):
-        log.debugf("cancel, no settings saved")
+        log.debugf(DEBUG_OPTIONS, "cancel, no settings saved")
         self.reject()
 
 
