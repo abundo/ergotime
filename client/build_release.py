@@ -16,11 +16,8 @@ includes.append("basium_driver_json")
 includes.append("basium_driver_sqlite")
 
 excludes = []
-# excludes = ['_gtkagg', '_tkagg', 'bsddb', 'curses', 'email', 'pywin.debugger',
-#             'pywin.debugger.dbgcon', 'pywin.dialogs', 'tcl',
-#             'Tkconstants', 'Tkinter']
-packages = ["atexit", "basium", "basium_driver_sqlite"]
 
+packages = ["atexit", "basium"]
 
 path = sys.path
 path.append("d:/hack/git/ergotime")
