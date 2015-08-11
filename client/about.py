@@ -32,8 +32,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
-import PyQt5.QtCore as QtCore
-import PyQt5.QtGui as QtGui
 import PyQt5.QtWidgets as QtWidgets
 
 import about_win
@@ -44,3 +42,9 @@ class AboutWin(QtWidgets.QDialog, about_win.Ui_Options):
         self.setupUi(self)
 
         self.btnClose.clicked.connect(self.accept)
+
+if __name__ == '__main__':
+    from myglobals import *
+    app = createQApplication()
+    win = AboutWin()
+    win.exec_()
