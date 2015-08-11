@@ -1,5 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+'''
+Manage tracking of time, timereports
+'''
 
 '''
 Copyright (c) 2014, Anders Lowinger, Abundo AB
