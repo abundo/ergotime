@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 
 '''
+Application startup
+'''
+
+'''
 Copyright (c) 2013, Anders Lowinger, Abundo AB
 All rights reserved.
 
