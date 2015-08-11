@@ -32,10 +32,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
-import PyQt5.QtCore as QtCore
-# import PyQt5.QtGui as QtGui
+# import PyQt5.QtCore as QtCore
 import PyQt5.QtWidgets as QtWidgets
-from PyQt5.Qt import QGuiApplication, QFont
+from PyQt5.Qt import QFont
 
 import options_win
 
@@ -65,8 +64,7 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         
         # Copy from settings -> GUI
 
-        # ----- general
-        
+        # ----- tab general
         self.comboFontName.setFont(QFont(sett.fontName))
         self.comboFontSize.setCurrentIndex(self.comboFontSize.findText(sett.fontSize))
         self.txtUsername.setText(sett.username)
@@ -75,17 +73,16 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         self.txtDatabasedir.setText(sett.database_dir)
         self.comboLoglevel.setCurrentIndex( self.comboLoglevel.findText(sett.loglevel) )
         
-        # ----- activity
+        # ----- tab activity
         self.spinActivitySyncInterval.setValue(sett.activity_sync_interval)
         
-        # ----- report
+        # ----- tab report
         self.spinReportSyncInterval.setValue(sett.report_sync_interval)
         
-        # ----- network
+        # ----- tab network
         self.txtServerUrl.setText(sett.server_url)
         self.spinNetworkTimeout.setValue(sett.networkTimeout)
         
-        self.spinIdleTimeout.setValue(sett.idle_timeout)
         self.btnOk.clicked.connect(self.ok)
         self.btnCancel.clicked.connect(self.cancel)
 
@@ -116,7 +113,6 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         sett.networkTimeout = self.spinNetworkTimeout.value()
         
         sett.sync()
-
         self.accept()
       
     def cancel(self):
@@ -125,4 +121,7 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
 
 
 if __name__ == '__main__':
-    pass
+    """Module test"""
+    app = createQApplication()
+    win = OptionsWin()
+    win.exec_()
