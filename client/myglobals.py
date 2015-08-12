@@ -33,6 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
 import os
+import sys
+import PyQt5.QtWidgets as QtWidgets
 
 # ----------------------------------------------------------------------
 
@@ -72,3 +74,13 @@ if DEBUG & DEBUG_FILES:
 else:
     localDatabaseName = "ergotime.db"
 localDatabaseName = userdir + os.sep + localDatabaseName
+
+
+def createQApplication():
+    app = QtWidgets.QApplication(sys.argv)
+    
+    app.setQuitOnLastWindowClosed(False);
+    app.setOrganizationName("Abundo AB");
+    app.setOrganizationDomain("abundo.se");
+    app.setApplicationName("ErgoTime");
+    return app
