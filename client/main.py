@@ -675,7 +675,6 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
     
     def _reportDetailsNew(self):
         """User clicked New"""
-#        if self.stateRD == StateRD.edit or self.stateRD == StateRD.new:
         if self.stateRD in [StateRD.edit, StateRD.new]:
             log.warning("Please save/cancel changes before creating new report")
             return
