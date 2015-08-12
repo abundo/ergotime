@@ -45,11 +45,13 @@ import util
 
 import basium
 from common.activity import Activity
+from PyQt5.Qt import QApplication
 
 
 class ActivityMgr(QtCore.QObject):
     sig = QtCore.pyqtSignal()
     
+    def __init__(self, main_db=None, util=util):
     def __init__(self, main_db=None):
         super().__init__()
         self.main_db = main_db
@@ -173,3 +175,40 @@ class ActivityMgr(QtCore.QObject):
 #                self.local_db.close()      # when basium supports close()
             else:
                 log.error("activitymgr thread, unknown command %s" % req)
+
+
+if __name__ == '__main__':
+    """Unit test"""
+    import time
+    
+    app = createQApplication()
+
+    class Util:
+        """Dummy database in memory for tests"""
+        
+        def openDatabase(self, s):
+            log.debug("Opening %s database :memory:" % s)
+            dbconf = basium.DbConf(database=":memory:")
+            db = basium.Basium(logger=log, driver="sqlite", checkTables=True, dbconf=dbconf)
+            db.addClass(Activity)
+            if not db.start():
+                log.error("Cannot open database")
+                exit(1)
+            return dbconf, db
+            
+        def openLocalDatabase(self):
+            return self.openDatabase("local")
+        
+        def openRemoteDatabase(self):
+            return self.openDatabase("remote")
+
+    util = Util()
+    tmp, local_db = util.openLocalDatabase() 
+    
+    activityMgr = ActivityMgr(main_db=local_db, util=util)
+    activityMgr.init()
+    activityMgr.sync()
+    activityMgr.stop()
+
+    while not activityMgr.toThreadQ.empty():
+        QApplication.processEvents()
