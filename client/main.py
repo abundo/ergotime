@@ -139,12 +139,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self._initReports()
         self._initReportDetails()
 
-        self.timetracker.activeUpdated.connect(self.updateStatus)
-        self.timetracker.stateSignal.connect(self._stateChanged)
-        
-        tmpid = self.comboCurrentActivity.itemData(self.comboCurrentActivity.currentIndex())
-        if tmpid and tmpid >= 0:
-            self.timetracker.updateReport(activityid=tmpid)
+        self.timetracker.init()
 
         self._ReportsSetSelectedDateToday()
         
@@ -227,27 +222,6 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         else:
             widget.setPalette(self.color_white)
         
-    def _stateChanged(self, state):
-        """Called when timetracker state changes"""
-        widgets = [self.dtCurrentStart, self.timeCurrentLen, self.txtCurrentComment]
-        if state == self.timetracker.stateInactive:
-            self.setWindowIcon(QtGui.QIcon("resource/tray-inactive.png"))
-            for widget in widgets:
-                self._setColor(widget, False)
-            self.timeCurrentLen.clear()
-            self.txtCurrentComment.clear()
-            
-        elif state == self.timetracker.stateActive:
-            self.setWindowIcon(QtGui.QIcon("resource/tray-active.png"))
-            for widget in widgets:
-                self._setColor(widget, True)
-            
-    def updateStatus(self, status):
-        """Called periodically by timetracker so GUI can be updated"""
-        self.timeCurrentLen.setTime(status.length)
-        self._myStatusBar.idle = "Idle %s" % status.idle
-
-
     def settingsUpdated(self):
         log.debugf(DEBUG_MAINWIN, "settingsUpdated")
         font = QFont(sett.fontName, int(sett.fontSize))
@@ -326,34 +300,98 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
     # ########################################################################
 
     def _initCurrentReport(self):
-        self.comboCurrentActivity.currentIndexChanged.connect( self._currentReportGuiChanged )
-        self.dtCurrentStart.dateTimeChanged.connect( self._currentReportGuiChanged )
-        self.txtCurrentComment.textChanged.connect( self._currentReportGuiChanged )
-        self.txtCurrentComment.textChanged.connect( self._currentReportGuiChanged )
+        self.report = None
+        self._currentReportStateChanged(self.timetracker.stateInactive)
+
+        self._currentReportGuiChanged()
+        self.comboCurrentActivity.currentIndexChanged.connect(self._currentReportGuiChanged)
+        self.comboCurrentProject.currentIndexChanged.connect(self._currentReportGuiChanged)
+        self.dtCurrentStart.dateTimeChanged.connect(self._currentReportGuiChanged)
+        self.timeCurrentLen.timeChanged.connect(self._currentReportGuiChanged)
+        self.txtCurrentComment.textChanged.connect(self._currentReportGuiChanged)
 
         self.btnCurrentStart.clicked.connect(self._currentReportStart)
-        self.btnCurrentStop.clicked.connect(self.timetracker.setStateInactive)
+        self.btnCurrentStop.clicked.connect(self._currentReportStop)
+        self.timetracker.stateSignal.connect(self._currentReportStateChanged)
+        self.timetracker.activeUpdated.connect(self._currentReportUpdated)
 
     def _currentReportStart(self):
-        self.dtCurrentStart.setDateTime( datetime.datetime.now() )
-        self.timetracker.setStateActive()
+        self.report = self._getNewReport()
+        self.report.start = datetime.datetime.now()
+        self.report.stop = self.report.start
+        
+        self.timetracker.setStateActive(report=self.report)
+        self._currentReportGuiChanged()
+
+    def _currentReportStop(self):
+        self.timetracker.setStateInactive()
+
+    def _currentReportUpdated(self, status):
+        """Called periodically by timetracker so GUI can be updated"""
+        self.timeCurrentLen.setTime(status.length)
+        self._myStatusBar.idle = "Idle %s" % status.idle
+        
+    def _currentReportStateChanged(self, state):
+        """Called when timetracker state changes"""
+        
+        icon = "tray-inactive.png"
+        widgets = [self.dtCurrentStart, self.timeCurrentLen, self.txtCurrentComment]
+        if state == self.timetracker.stateActive:
+            self.dtCurrentStart.setDateTime( QtCore.QDateTime.currentDateTime() )
+            icon = "tray-active.png"
+            for widget in widgets:
+                widget.setEnabled(True)
+                self._setColor(widget, True)
+        else:
+            self.dtCurrentStart.findChild(QtWidgets.QLineEdit).setText("")
+            self.timeCurrentLen.findChild(QtWidgets.QLineEdit).setText("")
+            self.txtCurrentComment.clear()
+            for widget in widgets:
+                self._setColor(widget, False)
+                widget.setEnabled(False)
+
+        self.btnCurrentStart.setEnabled(state == self.timetracker.stateInactive)
+        self.btnCurrentStop.setEnabled(state != self.timetracker.stateInactive)
+
+        self.setWindowIcon(QtGui.QIcon("resource/%s" % icon))
+
+    def _currentReportReportChanged(self):
+        """Copy self.report -> GUI"""
+        if self.report:
+            self.comboCurrentActivity.setCurrentIndex(self.comboCurrentActivity.findData(self.report.activityid))
+            self.comboCurrentProject.setCurrentIndex(self.comboCurrentProject.findData(self.report.projectid))
+            self.dtCurrentStart.setDateTime(self.report.start)
+            self.timeCurrentLen.setTime(self.report.length)
+            self.txtCurrentComment.setText(self.report.comment)
+        else:
+            self.comboCurrentActivity.clearEditText()
+            self.comboCurrentProject.clearEditText()
+            self.dtCurrentStart.clear()
+            self.timeCurrentLen.clear()
+            self.txtCurrentComment.clear()
     
     def _currentReportGuiChanged(self):
-        """Handle changes to the current report, updating the timetracker shadowed data"""
-        sender = self.sender()
-        if sender == self.comboCurrentActivity:
+        """Copy GUI to self.report"""
+        
+        if self.report:
             tmpid = self.comboCurrentActivity.itemData(self.comboCurrentActivity.currentIndex())
             if tmpid != None and tmpid > 0:
-                self.timetracker.updateReport(activityid = tmpid)
-        if sender == self.dtCurrentStart:
-            self.timetracker.updateReport(start = self.dtCurrentStart.dateTime().toPyDateTime().replace(microsecond=0))
-        if sender == self.timeCurrentLen:
-            # calculate new start
-            start = datetime.datetime.now() - self.timeCurrentLen.time().toPyTime()
-            self.timetracker.updateReport(start=start)
-        if sender == self.txtCurrentComment:
-            self.timetracker.updateReport(comment=self.txtCurrentComment.toPlainText())
-
+                self.report.activityid = tmpid
+    
+            tmpid = self.comboCurrentProject.itemData(self.comboCurrentProject.currentIndex())
+            if tmpid != None and tmpid > 0:
+                self.report.projectid = tmpid
+    
+            self.report.start = self.dtCurrentStart.dateTime().toPyDateTime().replace(microsecond=0)
+    
+            # calculate new start, end is always now()
+            t = self.timeCurrentLen.time()
+            seconds = t.hour() * 3600 + t.minute() * 60 + t.second()
+            start = datetime.datetime.now() - datetime.timedelta( seconds=seconds ) 
+    
+            self.report.comment = self.txtCurrentComment.toPlainText()
+            
+            self.timetracker.report = self.report
 
     # ########################################################################
     #
@@ -691,8 +729,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         if self.stateRD == StateRD.edit:
             log.warning("Please Save/Cancel changes to selected report before removing it")
             return
-#        if self.stateRD != StateRD.view or self.stateRD == StateRD.new:
-        if self.stateRD in [StateRD.view, StateRD.new]:
+        if self.stateRD != StateRD.view:
             log.warning("Please select a report to remove")
             return
         msgBox = QtWidgets.QMessageBox(parent=self)
@@ -701,8 +738,6 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
         response = msgBox.exec_()
         if response == QtWidgets.QMessageBox.Yes:
-#            _id = self._ReportsGetSelectedReportId()
-#            self.reportmgr.remove(Report(_id))   # will trigger update of Reports Table
             self.reportmgr.remove(self._reportDetail)   # will trigger update of Reports Table
     
     def _reportDetailsCancelChange(self):
@@ -713,8 +748,6 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         """Called when user edits any details of a report"""
         if self.stateRD == StateRD.view:
             self.stateRD = StateRD.edit
-#             for widget in [self.comboReportActivity, self.dtReportStart, self.dtReportStop, self.txtReportComment, self.timeReportLen]:
-#                 self._setColor(widget, True)
 
     def _reportDetailsModifyStart(self):
         """Handle the start +H -H +S -S buttons"""

@@ -52,7 +52,6 @@ class ActivityMgr(QtCore.QObject):
     sig = QtCore.pyqtSignal()
     
     def __init__(self, main_db=None, util=util):
-    def __init__(self, main_db=None):
         super().__init__()
         self.main_db = main_db
         

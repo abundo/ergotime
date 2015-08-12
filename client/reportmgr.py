@@ -405,12 +405,3 @@ the trigger is configured like this
 #                self.local_db.close()
             else:
                 log.error(DEBUG_REPORTMGR, "reportmgr thread, unknown command %s" % req[0])
-
-    ##########################################################################
-    #
-    # Everything below is running in a different thread
-    #
-    ##########################################################################
-
-    def runProcess(self):
-        pass

@@ -77,15 +77,18 @@ class Timetracker(QtCore.QObject):
         self.activitymgr = activitymgr
         self.reportmgr = reportmgr
 
-        self.report = Report()
+        self.report = parent._getNewReport()
         self._timer = None
         
         self.idleStartTime = None
         self.currentReport = None
         
-        self.state = self.stateInactive
+        self.state = self.stateStartup
         self._status = Status()
-        
+    
+    def init(self):
+        self.setStateInactive()
+    
     def setStateInactive(self):
         """User clicked Stop"""
         
@@ -109,14 +112,10 @@ class Timetracker(QtCore.QObject):
         else:
             log.error("Incorrect state %s" % self.state)
     
-    def setStateActive(self):
+    def setStateActive(self, report=None):
         """User clicked Start"""
         if self.state == self.stateInactive:
-            self.report.server_id = -1
-            self.report.user_id = 1
-            self.report.seq = 0
-            self.report.start = datetime.datetime.now().replace(microsecond=0)
-
+            self.report = report
             self._timer = QtCore.QTimer()
             self._timer.timeout.connect(self._update)
             self._update()
@@ -145,8 +144,8 @@ class Timetracker(QtCore.QObject):
         elif self.state == self.stateActive:
             self._timer.stop()
             self._timer = None
-            self._saveReport(subtract_seconds=sett.idle_timeout) # todo, subtract idle period
-            self.state = self.stateIdle
+            self._saveReport(subtract_seconds=sett.idle_timeout)
+            self.state = self.stateInactive
             self.stateSignal.emit(self.stateInactive)
 
         elif self.state == self.stateIdle:
@@ -155,15 +154,8 @@ class Timetracker(QtCore.QObject):
         else:
             log.error("Incorrect state %s" % self.state)
 
-    def updateReport(self, **kwargs):
-        """User has updated the current report in the GUI"""
-        for attr, value in kwargs.items():
-            if hasattr(self.report, attr):
-                setattr(self.report, attr, value)
-            else:
-                log.error("updateReport(%s=%s) no such attribute" % (attr, value))
-    
     def _saveReport(self, subtract_seconds=0):
+        log.debug("Saving report %s" % self.report)
         self.report.stop = datetime.datetime.now().replace(microsecond=0) - datetime.timedelta(seconds=subtract_seconds)
         self.reportmgr.store(self.report)
 
@@ -177,19 +169,15 @@ class Timetracker(QtCore.QObject):
         Called every second when state == stateActive
         Check if idle
         """
-        td = datetime.datetime.now().replace(microsecond=0) - self.report.start
-        if td.days:
-            # todo, reports cannot be longer than 24 hours, we just stop the report and 
-            log.info("Report close to 24 hours, which is max length")
-            QtCore.QTimer.singleShot(1, self.setStateIdle)
-            return
-        
+        self.report.stop = datetime.datetime.now().replace(microsecond=0)
+        td = self.report.stop - self.report.start
         self._status.length = self._seconds_to_time(td.seconds)
+
         idle_seconds = idle_dectect.getIdle()
         self._status.idle = self._seconds_to_time(idle_seconds)      
         if idle_seconds > sett.idle_timeout:
             log.info("Idle timeout detected")
-            QtCore.QTimer.singleShot(1, self.setStateIdle)
+            self.setStateIdle()
             return
 
         self.activeUpdated.emit(self._status)
