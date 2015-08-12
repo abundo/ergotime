@@ -52,6 +52,7 @@ class Ui_Main(object):
         self.gridLayout_3.addWidget(self.dtCurrentStart, 2, 1, 1, 1)
         self.timeCurrentLen = QtWidgets.QTimeEdit(self.horizontalGroupBox_2)
         self.timeCurrentLen.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.timeCurrentLen.setReadOnly(True)
         self.timeCurrentLen.setCurrentSection(QtWidgets.QDateTimeEdit.HourSection)
         self.timeCurrentLen.setObjectName("timeCurrentLen")
         self.gridLayout_3.addWidget(self.timeCurrentLen, 3, 1, 1, 1)
