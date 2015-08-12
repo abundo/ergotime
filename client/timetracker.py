@@ -136,7 +136,7 @@ class Timetracker(QtCore.QObject):
     def setStateIdle(self):
         """
         Idle detected, save current report and go to Inactive
-        This is mostly an internal state, external GUI only knows about Inactive/Active
+        This is an internal state, external GUI only knows about Inactive/Active
         Subtract the idle period before going to inactive
         """
         if self.state == self.stateInactive:
@@ -174,7 +174,7 @@ class Timetracker(QtCore.QObject):
                     
     def _update(self):
         """
-        Called every second when state=Active
+        Called every second when state == stateActive
         Check if idle
         """
         td = datetime.datetime.now().replace(microsecond=0) - self.report.start

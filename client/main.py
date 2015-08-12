@@ -277,6 +277,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         # Help, about
         self.actionAbout.triggered.connect(self.about)
 
+
     # ########################################################################
     #
     #   Log
@@ -294,6 +295,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         if action == clearAction:
             self.txtLog.clear()
             log.debugf(DEBUG_MAINWIN, "Log cleared()")
+
 
     # ########################################################################
     #
@@ -383,7 +385,6 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         t.clicked.connect(self._reportsTableRowClicked)
         
         self.reportmgr.sig.connect(self._reportsTableUpdated)
-
 
     def _reportsTableSet(self, table, row, col, value, userdata=None):
         table_item = QtWidgets.QTableWidgetItem(value)
@@ -531,6 +532,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             return _id
         return None
         
+
     # ########################################################################
     #
     #   Report details

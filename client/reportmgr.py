@@ -63,8 +63,8 @@ class ReportMgr(QtCore.QObject):
         self.t.daemon = True
         self.t.start()
 
-    # Load the list of reports from local db
     def init(self):
+        """Load the list of reports from local db"""
         self.sig.emit()
 
     def get(self, _id):
@@ -123,6 +123,7 @@ class ReportMgr(QtCore.QObject):
                 self.main_db.store(report)
                 ret = True
             else:
+                # Report does not exist on server, can be removed directly
                 self.main_db.delete(report)
             self.sig.emit()
             if self._autosync:
@@ -136,8 +137,8 @@ class ReportMgr(QtCore.QObject):
         if self._autosync:
             self.sync()
 
-    # Sync the local database with the one on the server
     def sync(self):
+        """Sync the local database with the one on the server"""
         self.toThreadQ.put( ["sync"] )
 
     def stop(self):
@@ -382,7 +383,6 @@ the trigger is configured like this
         log.debugf(DEBUG_REPORTMGR, "Sync() done")
         self.sig.emit()
 
-
     def runThread(self):
         log.debugf(DEBUG_REPORTMGR, "Starting reportmgr thread")
 
@@ -401,10 +401,8 @@ the trigger is configured like this
             elif req[0] == "sync":
                 self.remote_dbconf, self.srv_db = util.openRemoteDatabase()
                 self._do_sync()
-                
 #                self.srv_db.close()
 #                self.local_db.close()
-                
             else:
                 log.error(DEBUG_REPORTMGR, "reportmgr thread, unknown command %s" % req[0])
 

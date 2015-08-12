@@ -64,8 +64,8 @@ class ActivityMgr(QtCore.QObject):
         self.t.daemon = True
         self.t.start()
         
-    # Load the list of activities from local db
     def init(self):
+        """Load the list of activities from local db"""
         self._loadList()
         self.sig.emit()
 
@@ -91,8 +91,8 @@ class ActivityMgr(QtCore.QObject):
     def getList(self):
         return self.activities
    
-    # Sync the local database with the one on the server
     def sync(self):
+        """Sync the local database with the one on the server"""
         self.toThreadQ.put("sync")
 
     def save(self):
@@ -103,7 +103,6 @@ class ActivityMgr(QtCore.QObject):
                 self.basium.store(a)
             except basium.Error as err:
                 log.error("Cant save activity in local database %s" % err)
-        
 
     def stop(self):
         self.toThreadQ.put("quit")
@@ -151,7 +150,6 @@ class ActivityMgr(QtCore.QObject):
 
         self._loadList()
         self.sig.emit()
-        
     
     def run(self):
         log.debugf(DEBUG_ACTIVITYMGR, "Starting activitymgr thread")
