@@ -36,21 +36,29 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
+import platform
 
-from ctypes import Structure, windll, c_uint, sizeof, byref
+if platform.system() == "Windows":
 
-class LASTINPUTINFO(Structure):
-    _fields_ = [
-        ('cbSize', c_uint),
-        ('dwTime', c_uint),
-    ]
+    from ctypes import Structure, windll, c_uint, sizeof, byref
 
-def getIdle():
-    """Returns idle time in seconds"""
-    windll.user32.GetLastInputInfo(byref(lastInputInfo))
-    millis = windll.kernel32.GetTickCount() - lastInputInfo.dwTime
-    return millis // 1000
+    class LASTINPUTINFO(Structure):
+        _fields_ = [
+            ('cbSize', c_uint),
+            ('dwTime', c_uint),
+        ]
+
+    def getIdle():
+        """Returns idle time in seconds"""
+        windll.user32.GetLastInputInfo(byref(lastInputInfo))
+        millis = windll.kernel32.GetTickCount() - lastInputInfo.dwTime
+        return millis // 1000
 
 
-lastInputInfo = LASTINPUTINFO()
-lastInputInfo.cbSize = sizeof(lastInputInfo)
+    lastInputInfo = LASTINPUTINFO()
+    lastInputInfo.cbSize = sizeof(lastInputInfo)
+
+else:
+
+    def getIdle():
+        return 0
