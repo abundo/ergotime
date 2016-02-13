@@ -58,7 +58,7 @@ import timetracker
 import main_win
 import systray
 
-from idlelib.textView import view_file      # make cz_freeze stop complaining
+#from idlelib.textView import view_file      # make cz_freeze stop complaining
 
 debug = False
 #global = True    # during development

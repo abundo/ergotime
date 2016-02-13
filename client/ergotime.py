@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -42,7 +42,7 @@ import encodings.idna   # make sure cxfreeze includes the module
 
 import PyQt5.QtWidgets as QtWidgets
 
-sys.path.insert(0, "d:/hack/git/basium")
+#sys.path.insert(0, "d:/hack/git/basium")
 #sys.path.insert(0, "./basium")
 
 import main
