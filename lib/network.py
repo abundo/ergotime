@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Handle network IO
+"""
 
-'''
-Common network related utilities
-'''
-
-import urllib
-import urllib.request
 import json
+import urllib.parse
+import urllib.request
+
+from orderedattrdict import AttrDict
+
+
+class NetworkException(Exception):
+    pass
 
 
 class RequestWithMethod(urllib.request.Request):
@@ -21,37 +27,38 @@ class RequestWithMethod(urllib.request.Request):
         return self._method if self._method else super(RequestWithMethod, self).get_method()
 
 
-def request(method='GET', url=None, data=None, decode=False):
+def request(method='GET', url=None, param=None, data=None, decode=False):
     '''
     Do a REST call
     '''
     respdata = None
+    if param:
+        url += "?" + urllib.parse.urlencode(param)
     req = RequestWithMethod(url, method=method)
 #     if self.dbconf.username is not None:
 #         auth = '%s:%s' % (self.dbconf.username, self.dbconf.password)
 #         auth = auth.encode("utf-8")
 #         req.add_header(b"Authorization", b"Basic " + base64.b64encode(auth))
-#    try:
-    if data:
-        resp = urllib.request.urlopen(req, urllib.parse.urlencode(data, encoding="utf-8").encode("ascii") )
-    else:
-        resp = urllib.request.urlopen(req)
-#    except urllib.error.HTTPError as e:
-#        raise bc.Error(1, "HTTPerror %s" % e)
-#    except urllib.error.URLError as e:
-#        raise bc.Error(1, "URLerror %s" % e)
+    # print("url", url)
+    try:
+        if data:
+            resp = urllib.request.urlopen(req, urllib.parse.urlencode(data, encoding="utf-8").encode("ascii") )
+        else:
+            resp = urllib.request.urlopen(req)
+    except urllib.error as err:
+        raise NetworkException(err)
 
     if decode:
         encoding = resp.headers.get_content_charset()
         if encoding is None:
             encoding = "utf-8"
-#        try:
         tmp = resp.read().decode(encoding)
-        respdata = json.loads(tmp)
         resp.close()
-#        except ValueError:
-#            raise bc.Error(1, "JSON ValueError for " + tmp)
-#        except TypeError:
-#            raise bc.Error(1, "JSON TypeError for " + tmp)
+        respdata = json.loads(tmp)
+        if "data" in respdata:
+            respdata = respdata["data"]
+            # print("Reencoding http response")
+            for ix in range(0, len(respdata)):
+                respdata[ix] = AttrDict(respdata[ix])
 
     return respdata, resp

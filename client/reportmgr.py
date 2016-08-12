@@ -43,17 +43,15 @@ from logger import log
 from settings import sett
 
 import util
-
-import basium
-from common.report import Report
-
+import db
+import lib.network as network
 
 class ReportMgr(QtCore.QObject):
     sig = QtCore.pyqtSignal()
     
-    def __init__(self, main_db=None):
+    def __init__(self, localdb=None):
         super().__init__()
-        self.main_db = main_db
+        self.localdb = localdb
 
         self._autosync = False
         self.reports = []   # local cache for todays reports
@@ -71,43 +69,43 @@ class ReportMgr(QtCore.QObject):
         for report in self.reports:
             if report._id == _id:
                 return report
-        report = Report(_id)
         try:
-            data = self.main_db.load(report)
-        except basium.Error as err: 
+            sql = "SELECT * FROM report WHERE _id=?"
+            report = self.localdb.select_one(sql, (_id,))
+        except db.DbException as err: 
             log.error("Cant load report with _id %s from local database %s" % (_id, err))
             return None
-        if len(data) > 0:
-            return data[0]
-        return None
+        return report
 
     def getList(self, start=None):
-        r = Report()
-        query = self.main_db.query(r)
         stop = start + datetime.timedelta(days=1)
-        query.filter(r.q.start, ">=", start).filter(r.q.start, "<", stop).order(r.q.start)
         try:
-            data = self.main_db.load(query)
+            sql = "SELECT * FROM report WHERE start >= ? AND stop < ? ORDER BY start"
+            reports = self.localdb.select_all(sql, (start, stop))
             self.reports.clear()
-            for r in data:
+            for r in reports:
                 self.reports.append(r)
-        except basium.Error as err:
+        except db.DbException as err:
             log.error("Cannot load list of reports from local database %s" % err)
 
         return self.reports
 
     def getUnsyncronisedCount(self):
-        """Count number of reports in local database that is not syncronised with server"""
-        return 0
-        report = Report()
-        query = self.local_db.query().filter(report.q.server_id, "<", 0)
-        count = self.main_db.count(query)
-        return count
+        """
+        Count number of reports in local database that is not syncronised with server
+        """
+        # todo, use count(*)
+        sql = "SELECT count(*) FROM report WHERE server_id < 0"
+        reports = self.localdb.select_all(sql)
+        return len(reports)
     
     def store(self, report):
         try:
-            self.local_db.store(report)
-        except basium.Error as err:
+            if report._id < 0:
+                self.localdb.insert("report", d=report, primary_key="_id")
+            else:
+                self.localdb.update("report", d=report, primary_key="_id")
+        except db.DbException as err:
             log.error("Cannot store report in local database %s" % err)
             return False
         self.sig.emit()
@@ -119,16 +117,18 @@ class ReportMgr(QtCore.QObject):
         ret = False
         try:
             if report.server_id != None and report.server_id >= 0:
-                report.deleted = True   # Actual removal will be done during next sync
-                self.main_db.store(report)
+                # Report exist on server, mark for removal - next sync will remove the row
+                report.deleted = 1
+                self.localdb.update("report", d=report, primary_key="_id")
                 ret = True
             else:
                 # Report does not exist on server, can be removed directly
-                self.main_db.delete(report)
+                sql = "DELETE FROM report WHERE _id=?"
+                self.localdb.delete(sql, (report._id))
             self.sig.emit()
             if self._autosync:
                 self.sync()
-        except basium.Error as err:
+        except db.DbException as err:
             log.error("Can't update local database when deleting report %s" % err)
         return ret
 
@@ -198,142 +198,143 @@ the trigger is configured like this
          insert report in local database
 
 """
-        now = datetime.datetime.now().replace(microsecond=0)
-        
+        reportapi = "%s/api/report" % sett.server_url
+
         log.debugf(DEBUG_REPORTMGR, "Sync() Send deleted reports to server")
-        r = Report()
-        query = self.local_db.query().filter(r.q.deleted, "=", True)
         try:
-            data = self.local_db.load(query)
-        except basium.Error as err:
+            sql = "SELECT * FROM report WHERE deleted=1"
+            data = self.thread_db.select_all(sql)
+        except db.DbException as err:
             log.error("  Can't load reports marked for deletion from local database %s" % err)
             return
         for report in data:
             log.debugf(DEBUG_REPORTMGR, "  Delete report on server %s" % report)
-            report._id = report.server_id
+            
+            report._id = report.server_id   # use server _id
+            report.updated = 0
             try:
-                self.srv_db.store(report)
-            except basium.Error as err:
+                url = url="%s/%s" % (reportapi, report._id)
+                network.request("PUT", url=url, data=report, decode=True)
+            except network.NetworkException as err:
                 log.error("  Can't update report on server %s" % err)
                 return
 
         log.debugf(DEBUG_REPORTMGR, "Sync() Send new reports to server")
-        r = Report()
-        query = self.local_db.query().filter(r.q.server_id, "<", 0)
         try:
-            data = self.local_db.load(query)
-        except basium.Error as err:
+            sql = "SELECT * FROM report WHERE server_id < 0"
+            data = self.thread_db.select_all(sql)
+        except db.DbException as err:
             log.error("  Can't load new reports from local database %s" % err)
             return
         for local_report in data:
-            log.debugf(DEBUG_REPORTMGR, "  Sending new report to server _id=%s" % local_report._id)
             log.debugf(DEBUG_REPORTMGR, "  Sending new report to server %s" % local_report)
             _id = local_report._id
             local_report._id = -1
             try:
-                self.srv_db.store(local_report)
-            except basium.Error as err:
+                url=reportapi
+                srv_data, tmp = network.request("POST", url=url, data=local_report, decode=True)
+            except network.NetworkException as err:
                 log.error("  Can't send new report to server %s" % err)
                 return
-            local_report.server_id = local_report._id
+            local_report.server_id = srv_data["_id"]
             local_report._id = _id
             try:
-                self.local_db.store(local_report)
-            except basium.Error as err:
-                log.error("  Error saving server_id in local database %s" % err)
+                self.localdb.update("report", d=local_report, primary_key="_id")
+            except db.DbException as err:
+                log.error("  Can't update report in local database" % err)
                 return
             
         # todo: load report from server to see if it is changed first
+        
         log.debugf(DEBUG_REPORTMGR, "Sync() Send updated reports To server")
-        r = Report()
-        query = self.local_db.query().filter(r.q.updated, "=", True).filter(r.q.server_id, "!=", None)
         try:
-            local_data = self.local_db.load(query)
-        except basium.Error as err:
-            log.error("  Error loading local updated reports %s" % err)
+            sql = "SELECT * FROM report WHERE updated != 0 AND updated IS NOT NULL"
+            local_reports = self.thread_db.select_all(sql)
+        except db.DbException as err:
+            log.error("  Cannot load updated reports from local database, %s" % err)
             return
-        for local_report in local_data:
+        for local_report in local_reports:
             log.debugf(DEBUG_REPORTMGR, "  Updating report on server %s" % local_report)
             local_report._id = local_report.server_id
+            local_report.updated = 0
             try:
-                self.srv_db.store(local_report)
-            except basium.Error as err:
-                log.error("  Error sending new report to server %s" % err)
+                network.request("PUT", url="%s/%s" % (reportapi, local_report._id), data=local_report)
+            except db.DbException as err:
+                log.error("  Cannot send new report to server, %s" % err)
                 return
-            local_report.updated = False
             try:
-                self.local_db.store(local_report)
-            except basium.Error as err:
+                self.localdb.update("report", d=local_report, primary_key="_id")
+            except db.DbException as err:
                 log.error("  Error storing updated report in local database %s" % err)
                 return
 
 
         log.debugf(DEBUG_REPORTMGR, "Sync() Get new/updated reports from server")
 
-        # first, get highest modified seq number from local database
-        query = self.local_db.query()
-        query.order(r.q.seq, desc=True).limit(rowcount=1)
+        # first, get highest seq number from local database, anything higher than this
+        # we don't have locally
         try:
-            local_data = self.local_db.load(query)
-        except basium.Error as err:
+            sql = "SELECT MAX(seq) FROM report"
+            local_data = self.thread_db.select_one(sql)
+        except db.DbException as err:
             log.error("  Error getting highest seq from local database %s" % err)
             return
-        if len(local_data) > 0:
-            local_max_seq = local_data[0].seq
-            modified = None
+        if local_data and local_data["MAX(seq)"] is not None:
+            local_max_seq = local_data["MAX(seq)"]
         else:
             local_max_seq = 0
-            modified = now - datetime.timedelta(days=90)     # todo, settings for how long back we want to sync
 
         step = 10   # number of reports in each loop
         offset = 0
         setMaxLocalSeq = local_max_seq  # if we delete local reports, we may loose highest seq
-        self.reports.clear()
+        self.reports.clear()            # clear cache, we may get new data from server
         error = False
         while True and not error:
-            srv_query = self.srv_db.query()
-            srv_query.filter(r.q.seq, ">", local_max_seq)
-            if modified:
-                srv_query.filter(r.q.modified, ">", modified)
-            srv_query.order(r.q._id)
-            srv_query.limit(offset=offset, rowcount=step)
-            log.debugf(DEBUG_REPORTMGR, "query " + srv_query.encode())
+#            srv_query = self.srv_db.query()
+#            srv_query.filter(r.q.seq, ">", local_max_seq)
+#            if modified:
+#                srv_query.filter(r.q.modified, ">", modified)
+#            srv_query.order(r.q._id)
+#            srv_query.limit(offset=offset, rowcount=step)
+#            log.debugf(DEBUG_REPORTMGR, "query " + srv_query.encode())
             try:
-                srv_data = self.srv_db.load(srv_query)
-            except basium.Error as err:
-                log.error("  Can't get Error getting modified timestamp %s" % err)
+                url = "%s/sync/%s" % (reportapi, local_max_seq)  # todo, maxage from settings
+                param = { "limit": step, "offset": offset, "maxage": 180 }
+                srv_reports, tmp = network.request("GET", url=url, param=param, decode=True)
+            except db.DbException as err:
+                log.error("  Can't get new/updated reports from server, %s" % err)
                 break
 
-            if len(srv_data) < 1:
+            if len(srv_reports) < 1:
                 break   # no more data
 
-            if len(srv_data):
-                log.debugf(DEBUG_REPORTMGR, "------------------------------- offset %d" % offset)
-            for srv_report in srv_data:
-                local_query = self.local_db.query()
-                local_query.filter(r.q.server_id, "=", srv_report._id)
+            log.debugf(DEBUG_REPORTMGR, "------------------------------- offset %db" % offset)
+            for srv_report in srv_reports:
+                # check if we have the report locally
                 try:
-                    local_data = self.local_db.load(local_query)
-                except basium.Error as err:
+                    sql = "SELECT * FROM report WHERE server_id=?"
+                    local_data = self.thread_db.select_one( sql, (srv_report._id,) )
+                except db.DbException as err:
                     log.error("  Can't load report from local database %s" % err)
                     error = True
                     break
-                if len(local_data) > 0:
-                    # we have report in local database
-                    local_report = local_data[0]
+                if srv_report.seq > setMaxLocalSeq:
+                    setMaxLocalSeq = srv_report.seq
+                if local_data:
+                    # we already have report in local database
+                    local_report = local_data
                     
                     if srv_report.deleted:
                         # report is marked as deleted on server, remove locally
                         log.debugf(DEBUG_REPORTMGR, "  From server, report with _id %s is deleted" % srv_report._id)
-                        if srv_report.seq > setMaxLocalSeq:
-                            setMaxLocalSeq = srv_report.seq
                         try:
-                            deleted_count = self.local_db.delete(local_report)
-                        except basium.Error as err:
+                            sql = "DELETE FROM report WHERE _id=?"
+                            deleted_count = self.thread_db.delete(sql, (local_report._id,) )
+                        except db.DbException as err:
                             log.error("  Can't delete report from local database %s" % err)
                             error = True
                             break
-                        if deleted_count == 0:
+                        if deleted_count < 1:
                             log.error("  Can't delete report from local database")
                             
                     else:
@@ -342,42 +343,44 @@ the trigger is configured like this
                         srv_report.server_id = srv_report._id
                         srv_report._id = local_report._id
                         try:
-                            self.local_db.store(srv_report)
-                        except basium.Error as err:
+                            self.thread_db.update("report", d=srv_report)
+                        except db.DbException as err:
                             log.error("  Can't replace report in local database with one from server %s" % err)
                             error = True
                             break
                 else:
                     # we don't have the report locally, store the one from the server as a new one
+                    if srv_report.deleted:
+                        # TODO maxseqnr
+                        continue    # Ignore the report, it is deleted and we dont have it locally
                     log.debugf(DEBUG_REPORTMGR, "  From server, report with _id %s is new" % srv_report._id)
                     srv_report.server_id = srv_report._id
                     srv_report._id = -1
+                    srv_report.updated = 0
                     try:
-                        self.local_db.store(srv_report)
-                    except basium.Error as err:
+                        self.thread_db.insert("report", d=srv_report)
+                    except db.DbException as err:
                         log.error("  Can't store new server report in local database %s" % err)
                         error = True
                         break
 
-            offset += step                
-            # check if we have the record locally
+            offset += step
+
 
         if setMaxLocalSeq > local_max_seq:
             # just get any report from local database, and set seq
-            query = self.local_db.query()
-            query.order(r.q.seq, desc=True).limit(rowcount=1)
             try:
-                local_data = self.local_db.load(query)
-            except basium.Error as err:
+                sql = "SELECT * FROM report ORDER BY seq desc LIMIT 1"
+                local_report = self.thread_db.select_one(sql)
+            except db.DbException as err:
                 log.error("  Can't get highest seq from local database %s" % err)
                 return
-            if len(local_data) > 0:
-                local_report = local_data[0]
+            if local_report:
                 if local_report.seq < setMaxLocalSeq:
                     local_report.seq = setMaxLocalSeq
                     try:
-                        self.local_db.store(local_report)
-                    except basium.Error as err:
+                        self.thread_db.update("report", d=local_report)
+                    except db.DbException as err:
                         log.error("  Can't update highest seq in local database %s" % err)
 
         log.debugf(DEBUG_REPORTMGR, "Sync() done")
@@ -386,10 +389,10 @@ the trigger is configured like this
     def runThread(self):
         log.debugf(DEBUG_REPORTMGR, "Starting reportmgr thread")
 
-        # connect to local database, we have a separate connection in this thread to 
-        # simplify database operations
+        # connect to local database, we have a separate connection in this thread
+        # to simplify database operations
         log.debugf(DEBUG_REPORTMGR, "Opening local database")
-        self.local_dbconf, self.local_db = util.openLocalDatabase()
+        self.thread_db = util.openLocalDatabase2()
         
         while True:
             req = self.toThreadQ.get()
@@ -399,9 +402,29 @@ the trigger is configured like this
                 return
 
             elif req[0] == "sync":
-                self.remote_dbconf, self.srv_db = util.openRemoteDatabase()
                 self._do_sync()
-#                self.srv_db.close()
-#                self.local_db.close()
             else:
                 log.error(DEBUG_REPORTMGR, "reportmgr thread, unknown command %s" % req[0])
+
+
+if __name__ == '__main__':
+    """
+    Unit test
+    """
+    import time
+    import logging
+    from PyQt5.Qt import QApplication
+    
+    log.setLevel(logging.DEBUG)
+    app = createQApplication()
+
+    localdb = util.openLocalDatabase2(":memory:")
+    
+    reportMgr = ReportMgr(localdb=localdb)
+    reportMgr.init()
+    reportMgr.sync()
+    reportMgr.stop()
+
+    while not reportMgr.toThreadQ.empty():
+        QApplication.processEvents()
+        time.sleep(0.5)

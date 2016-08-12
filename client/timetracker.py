@@ -40,8 +40,6 @@ from myglobals import *
 from logger import log
 from settings import sett
 
-from common.report import Report
-
 import idle_dectect
 
 

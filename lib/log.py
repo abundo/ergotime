@@ -52,7 +52,7 @@ def debug(msg):
 
 formatstr='%(asctime)s %(levelname)s %(message)s '
 loglevel=logging.INFO
-logger = logging.getLogger('luconf')
+logger = logging.getLogger('ergotime')
 logger.setLevel(loglevel)
 
 # remove all handlers
@@ -60,7 +60,6 @@ for hdlr in logger.handlers:
     logger.removeHandler(hdlr)
 
 consolehandler = logging.StreamHandler()
-consolehandler.setLevel(loglevel)
 
 formatter = logging.Formatter(formatstr)
 consolehandler.setFormatter(formatter)

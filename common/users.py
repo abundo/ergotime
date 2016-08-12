@@ -32,9 +32,16 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
-import basium_model
+from orderedattrdict import AttrDict
 
-class Users(basium_model.Model):
-    name = basium_model.VarcharCol()
-    password = basium_model.VarcharCol()
-    active = basium_model.BooleanCol()
+class User(AttrDict):
+    
+    _primary_key = ["_id"]
+    
+    def __init__(self):
+        super().__init__()
+        
+        self._id = -1
+        self.name = ""
+        self.password = ""
+        self.active = True

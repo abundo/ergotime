@@ -42,7 +42,6 @@ import PyQt5.QtWidgets as QtWidgets
 
 DEBUG_FILES             = 1 << 0
 DEBUG_SETTINGS          = 1 << 1
-DEBUG_BASIUM            = 1 << 2
 DEBUG_ACTIVITYMGR       = 1 << 3
 DEBUG_REPORTMGR         = 1 << 4
 DEBUG_MAINWIN           = 1 << 5
@@ -52,7 +51,6 @@ DEBUG_SYSTRAY           = 1 << 7
 DEBUG = 0
 DEBUG |= DEBUG_FILES       * 1
 DEBUG |= DEBUG_SETTINGS    * 0
-DEBUG |= DEBUG_BASIUM      * 1
 DEBUG |= DEBUG_ACTIVITYMGR * 1
 DEBUG |= DEBUG_REPORTMGR   * 1
 DEBUG |= DEBUG_MAINWIN     * 1
@@ -60,6 +58,10 @@ DEBUG |= DEBUG_OPTIONS     * 1
 DEBUG |= DEBUG_SYSTRAY     * 1
 
 # ----------------------------------------------------------------------
+
+
+runFromIde = "runFromIde" in os.environ
+
 
 # Create datadir in the users home directory
 

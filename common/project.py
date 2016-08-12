@@ -28,9 +28,15 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-import basium_model
+from orderedattrdict import AttrDict
 
-class Project(basium_model.Model):
-    activityid = basium_model.IntegerCol()
-    name = basium_model.VarcharCol()
-    active = basium_model.BooleanCol()
+class Project(AttrDict):
+
+    _primary_key = "_id"
+    
+    def __init__(self):
+        super().__init__()
+
+    activityid = -1
+    name = ""
+    active = 1
