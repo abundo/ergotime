@@ -38,10 +38,10 @@ from myglobals import *
 from logger import log
 from settings import sett
 
-import db
+import lib.db as db
 
 def openLocalDatabase2(dbname=None):
-    dbconf = { 'name': dbname }
+    dbconf = { 'name': sett.localDatabaseName }
     conn = db.Database(dbconf, driver="sqlite")
     conn.connect()
 

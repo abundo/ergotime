@@ -43,7 +43,7 @@ from logger import log
 from settings import sett
 
 import util
-import db
+import lib.db as db
 import lib.network as network
 
 
