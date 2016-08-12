@@ -73,6 +73,7 @@ class MySettings(QtCore.QObject):
     server_url             = AttrTypDefault(str, "http://ergotime.int.abundo.se:8000/")
     networkTimeout         = AttrTypDefault(int, 60)
 
+    localDatabaseName      = localDatabaseName
 
     def _attriter(self):
         """Iterate through all settings"""
