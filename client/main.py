@@ -38,12 +38,7 @@ import enum
 
 import PyQt5.QtCore as QtCore
 import PyQt5.QtGui as QtGui
-import PyQt5.QtWidgets as QtWidgets
 from PyQt5.Qt import QFont, QGuiApplication
-
-from common.activity import Activity
-from common.report import Report
-from common.users import Users
 
 import util
 import options
@@ -54,14 +49,12 @@ from settings import sett
 from activitymgr import ActivityMgr
 from reportmgr import ReportMgr
 
+from common.report import Report
+
 import timetracker
 import main_win
 import systray
 
-#from idlelib.textView import view_file      # make cz_freeze stop complaining
-
-debug = False
-#global = True    # during development
 
 StateRD = enum.Enum("StateRD", "none view edit new")
 
@@ -101,7 +94,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         sys.stdout = log
         sys.stderr = log
         print("STDOUT/STDERR Redirected to log")
-
+        
         self.color_white = self.dtCurrentStart.palette()
         self.color_white.setColor(QtGui.QPalette.All, QtGui.QPalette.Base, QtGui.QColor(QtCore.Qt.white))
         
@@ -122,10 +115,10 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         """This is called from event loop, so GUI is fully initialized"""
 
         self.stateRD = StateRD.none
-        self.dbconf, self.basium = util.openLocalDatabase()
+        self.localdb = util.openLocalDatabase2()
 
-        self.activitymgr = ActivityMgr(main_db=self.basium)
-        self.reportmgr = ReportMgr(main_db=self.basium)
+        self.activitymgr = ActivityMgr(localdb=self.localdb)
+        self.reportmgr = ReportMgr(localdb=self.localdb)
 
         self.activitymgr.init()
         self.reportmgr.init()
@@ -164,7 +157,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
     def _closeHandler(self):
         msgBox = QtWidgets.QMessageBox(parent=self)
 
-        if not debug:
+        if not runFromIde:
             # is there an current activity? it needs to be stopped and saved
             if self.timetracker.state == self.timetracker.stateActive:
                 msgBox.setText("There is an active activity, do you want to save this as a report?")
@@ -177,7 +170,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             # do we have unsyncronised local changes?
             count = self.reportmgr.getUnsyncronisedCount()
             if count > 0:
-                msgBox.setText("There are %s reports in local database that needs to be syncronized with the server. Do you want to do this now?")
+                msgBox.setText("There are %s reports in local database that needs to be syncronized with the server. Do you want to do this now?" % count)
                 msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                 msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
                 response = msgBox.exec_()
@@ -679,7 +672,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             self._reportDetail = self._getNewReport()
             self.stateRD = StateRD.none
             self.lblReportSyncState.clear()
-            # d = QtCore.QDateTime.fromMSecsSinceEpoch(0)
+            # db = QtCore.QDateTime.fromMSecsSinceEpoch(0)
             d = datetime.datetime.now()
             self.dtReportStart.setDateTime(d)
             self.dtReportStop.setDateTime(d)
@@ -705,6 +698,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         # todo project
         self._reportDetail.start = self.dtReportStart.dateTime().toPyDateTime().replace(microsecond=0)
         self._reportDetail.stop = self.dtReportStop.dateTime().toPyDateTime().replace(microsecond=0)
+        self._reportDetail.modified = datetime.datetime.now().replace(microsecond=0)
         self._reportDetail.comment = self.txtReportComment.toPlainText()
         if self._reportDetail.comment == None:
             self._reportDetail.comment = ""

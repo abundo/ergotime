@@ -3,6 +3,8 @@
 
 '''
 Manage logging
+
+All logging is done througt QT signal/slots, so they can be used from other threads.
 '''
 
 '''
@@ -35,16 +37,57 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime
 import threading
+import logging
+
+from myglobals import *
+from lib.log import *
 
 import PyQt5.QtCore as QtCore
 
-from myglobals import *
 
 _INFO=0
 _WARNING=1
 _ERROR=2
 _DEBUG=3
 _CONSOLE=4
+
+INFO = logging.INFO
+WARNING = logging.WARNING
+ERROR = logging.ERROR
+DEBUG = logging.DEBUG
+
+level_dict = {'info': logging.INFO, 
+              'warning': logging.WARNING,
+              'error': logging.ERROR,
+              'debug': logging.DEBUG}
+    
+
+# class QtLogHandler(logging.StreamHandler):
+class QtLogHandler(logging.Handler):
+    """
+    Custom logging.Handler that outputs logging to a QT widget
+    """
+    def __init__(self):
+        super().__init__(self)
+        self._lines = [] # temp buffer until we have an output device
+        self._qtwidget = None
+
+    def setQtwidget(self, qtwidget):
+        self._qtwidget = qtwidget
+        for line in self._lines:
+            self._qtwidget.appendPlainText(line)
+        self._lines = []
+
+    def emit(self, record):
+        log_entry = self.format(record)
+#        now = datetime.datetime.now().strftime("%Y-%m-%db %H:%M:%S")
+#        line = "%s %s %s %s" % (now, threadname, self.levels[level], msg)
+        if self.out != None:
+            self.out.appendPlainText(log_entry)
+        else:
+            self._lines.append(log_entry)
+            print(log_entry)
+    
 
 class Log(QtCore.QObject):
     """
@@ -72,7 +115,7 @@ class Log(QtCore.QObject):
 
     def log(self, level, threadname, msg):
         if level <= self.level:
-            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            now = datetime.datetime.now().strftime("%Y-%m-%db %H:%M:%S")
             line = "%s %s %s %s" % (now, threadname, self.levels[level], msg)
             if self.out != None:
                 self.out.appendPlainText(line)
@@ -93,6 +136,9 @@ class Log(QtCore.QObject):
         self.logTrigger.emit(_DEBUG, threading.current_thread().getName(), msg)
 
     def debugf(self, mask, msg):
+        """
+        Show debug message, if debug for this type is enabled
+        """
         if DEBUG & mask:
             self.logTrigger.emit(_DEBUG, threading.current_thread().getName(), msg)
 
@@ -105,4 +151,46 @@ class Log(QtCore.QObject):
         # this is defined so we can redirect stdout/stderr here without warnings
         pass
 
+
 log = Log()
+
+
+def setLevel(level):
+    if isinstance(level, str):
+        level = level_dict[level]
+    logger.setLevel(level)
+
+def info(msg):
+    msg = str(msg).replace('\n', ', ')
+    logger.info(msg)
+
+def warning(msg):
+    msg = str(msg).replace('\n', ', ')
+    logger.warning(msg)
+
+def error(msg):
+    msg = str(msg).replace('\n', ', ')
+    logger.error(msg)
+
+def debug(msg):
+    try:
+        msg = str(msg).replace('\n', ', ')
+    except UnicodeDecodeError:
+        return
+    logger.debug(msg)
+
+
+formatstr='%(asctime)s %(levelname)s %(message)s '
+loglevel=logging.INFO
+logger = logging.getLogger('ergotime')
+logger.setLevel(loglevel)
+
+# remove all handlers
+for hdlr in logger.handlers:
+    logger.removeHandler(hdlr)
+
+consolehandler = logging.StreamHandler()
+
+formatter = logging.Formatter(formatstr)
+consolehandler.setFormatter(formatter)
+logger.addHandler(consolehandler)

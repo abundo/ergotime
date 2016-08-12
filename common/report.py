@@ -32,18 +32,25 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
-import basium_model
+from orderedattrdict import AttrDict
 
-class Report(basium_model.Model):
-    user_id = basium_model.IntegerCol()
-    activityid = basium_model.IntegerCol()
-    start = basium_model.DateTimeCol()
-    stop = basium_model.DateTimeCol()
-    comment = basium_model.VarcharCol()
+class Report(AttrDict):
+    
+    _primary_key = "_id"
 
-    modified = basium_model.DateTimeCol()
-    seq = basium_model.IntegerCol()
-    deleted = basium_model.BooleanCol()
-
-    server_id = basium_model.IntegerCol()       # used on client, _id on server
-    updated = basium_model.BooleanCol()         # used on client, indicates local updates need sync
+    def __init__(self):
+        super().__init__()
+        
+        self._id = -1
+        self.user_id = -1
+        self.activityid = -1
+        self.start = None
+        self.stop = None
+        self.comment = ""
+     
+        self.modified = None
+        self.seq = -1
+        self.deleted = 0
+     
+        self.server_id = -1     # used on client, _id on server
+        self.updated = 0        # used on client, indicates local updates need sync

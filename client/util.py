@@ -33,37 +33,59 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
 import os
-import basium
 
 from myglobals import *
 from logger import log
 from settings import sett
 
-from common.activity import Activity
-from common.report import Report
-from common.users import Users
+import db
 
+def openLocalDatabase2(dbname=None):
+    if dbname == None:
+        dbname="c:/temp/ergotime.db"
+    # dbconf = { 'name': localDatabaseName }
+    dbconf = { 'name': dbname }
+    conn = db.Database(dbconf, driver="sqlite")
+    conn.connect()
 
-def openLocalDatabase():
-    dbconf = basium.DbConf(database=localDatabaseName, log=log)
-    log.debugf(DEBUG_FILES, "Opening local database %s" % (dbconf.database))
-    db = basium.Basium(logger=log, driver="sqlite", checkTables=True, dbconf=dbconf)
-    db.addClass(Activity)
-    db.addClass(Report)
-    db.addClass(Users)
-    if not db.start():
-        log.error("Cannot open local database, very limited functionality")
-        return None, None   # todo exception
-    return dbconf, db
+    sql  = "CREATE TABLE IF NOT EXISTS report ("
+    sql += "  _id         INTEGER PRIMARY KEY, "
+    sql += "  user_id     INT  NOT NULL default -1, "
+    sql += "  activityid  INT  NOT NULL default -1, "
+    sql += "  start       TIMESTAMP NOT NULL, "
+    sql += "  stop        TIMESTAMP NOT NULL, "
+    sql += "  comment     TEXT NOT NULL default '', "
 
-def openRemoteDatabase(databaseName=None):
-    dbconf = basium.DbConf(host=sett.server_url, database="ergotime", log=log) # username="", password=""
-    log.debugf(DEBUG_FILES, "Opening remote database %s on %s" % (dbconf.database, dbconf.host))
-    db = basium.Basium(logger=log, driver="json", checkTables=False, dbconf=dbconf)
-    db.addClass(Activity)
-    db.addClass(Report)
-    db.addClass(Users)
-    if not db.start():
-        log.error("Cannot open ergotime database on remote server, sync aborted")
-        return None, None   # todo exception
-    return dbconf, db
+    sql += "  modified    TIMESTAMP NOT NULL, "
+    sql += "  seq         INT  NOT NULL default -1, "
+    sql += "  deleted     INT  NOT NULL default  0, "
+
+    sql += "  server_id   INT  NOT NULL default -1, "
+    sql += "  updated     INT  NOT NULL default -1 "
+    sql += ");"
+    conn.execute(sql)
+    
+    sql  = "CREATE TABLE IF NOT EXISTS activity ("
+    sql += "  _id         INTEGER PRIMARY KEY, "
+    sql += "  name        TEXT NOT NULL default '', "
+    sql += "  description TEXT NOT NULL default '', "
+    sql += "  project_id  INT  NOT NULL default -1, "
+    sql += "  active      INT  NOT NULL default  0, "
+    sql += "  server_id   INT  NOT NULL default -1 "
+    sql += ");"
+    conn.execute(sql)
+    
+    sql  = "CREATE TABLE IF NOT EXISTS project ("
+    sql += "  _id         INTEGER PRIMARY KEY, "
+    sql += "  activity_id INT  NOT NULL default -1, "
+    sql += "  name        TEXT NOT NULL default '', "
+    sql += "  costcenter  TEXT NOT NULL default '', "
+    sql += "  active      INT  NOT NULL default  0 "
+    sql += ");"
+    conn.execute(sql)
+
+    return conn
+    
+
+if __name__ == '__main__':
+    openLocalDatabase2("c:/temp/ergotime.db")

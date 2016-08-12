@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import queue
 import threading
+from orderedattrdict import AttrDict
 
 import PyQt5.QtCore as QtCore
 
@@ -42,18 +43,16 @@ from logger import log
 from settings import sett
 
 import util
-
-import basium
-from common.activity import Activity
-from PyQt5.Qt import QApplication
+import db
+import lib.network as network
 
 
 class ActivityMgr(QtCore.QObject):
     sig = QtCore.pyqtSignal()
     
-    def __init__(self, main_db=None, util=util):
+    def __init__(self, localdb=None):
         super().__init__()
-        self.main_db = main_db
+        self.localdb = localdb
         
         self.activities = []
         self.activities_id = {}
@@ -73,67 +72,78 @@ class ActivityMgr(QtCore.QObject):
             return self.activities_id[activityid]
         return None
 
-    def _loadList(self):
-        activity = Activity()
-        dbquery = self.main_db.query().order(activity.q.name)
-        try:
-            data = self.main_db.load(dbquery)
-        except basium.Error as err:
-            log.error("Cannot load activitylist from local database, %s" % err)
-            return
-        self.activities.clear()
-        self.activities_id.clear()
-        for activity in data:
-            self.activities.append(activity)
-            self.activities_id[activity.server_id] = activity
-
     def getList(self):
         return self.activities
    
-    def sync(self):
-        """Sync the local database with the one on the server"""
-        self.toThreadQ.put("sync")
-
     def save(self):
         log.debugf(DEBUG_ACTIVITYMGR, "Saving activities")
-        for a in self.activities:
-            log.debugf(DEBUG_ACTIVITYMGR, "Storing activity %s" % a.name)
+        for activity in self.activities:
+            log.debugf(DEBUG_ACTIVITYMGR, "Storing activity %s" % activity.name)
             try:
-                self.basium.store(a)
-            except basium.Error as err:
-                log.error("Cant save activity in local database %s" % err)
+                self.localdb.update("activity", d=activity, primary_key="_id")
+            except db.DbException as err:
+                log.error("Cant save activity in local database, %s" % err)
+        
+    def _loadList(self):
+        sql = "SELECT * FROM activity ORDER BY name"
+        activities = self.localdb.select_all(sql)
+        
+        self.activities.clear()
+        self.activities_id.clear()
+        for activity in activities:
+            self.activities.append(activity)
+            self.activities_id[activity.server_id] = activity
+        return
+    
+    def sync(self):
+        """
+        Sync the local database with the one on the server
+        """
+        self.toThreadQ.put("sync")
 
     def stop(self):
         self.toThreadQ.put("quit")
 
+
+    ##############################################################################
+    #
+    # Everything below is running in a different thread
+    #
+    ##############################################################################
+
     def _do_sync(self):
-        a = Activity()
-        query = self.remote_db.query(a)
+        """
+        Runs as a separate thread
+        """
+        
+        # Get list of all activities on server
         try:
-            data = self.remote_db.load(query)
-        except basium.Error as err:
+            srv_activities, tmp = network.request("GET", "%s/api/activity" % sett.server_url, decode=True)
+        except db.DbException as err:
             log.error("Cannot load list of activities from server %s" % err)
             return
-
-        for srv_activity in data:
-            # logger.global("Server activity %s" % srv_activity)
-            query = self.basium.query().filter(a.q.server_id, "=", srv_activity._id)
-            try:
-                data2 = self.basium.load(query)
-            except basium.Error as err:
-                log.error("Can't load local activity %s" % err)
-                return
-            if len(data2) > 0:
+#        print("srvactivities", srvactivities)
+        
+        for srv_activity in srv_activities:
+            srv_activity = AttrDict(srv_activity)
+            log.debug("Server activity %s" % srv_activity)
+             
+            sql = "SELECT * FROM activity WHERE server_id=?"
+            local_activity = self.localdb.select_one(sql, (srv_activity["_id"],) )
+            if local_activity:
                 # we have the report locally, check if changed
-                local_activity = data2[0]
-                if local_activity.name != srv_activity.name or local_activity.active != srv_activity.active:
-                    log.debugf(DEBUG_ACTIVITYMGR, "Updating local copy of activity")
-                    local_activity.name = srv_activity.name
-                    local_activity.server_id = srv_activity._id
-                    local_activity.active = srv_activity.active
+                changes = []
+                for attr in ['name', "description", "active", "project_id"]:
+                    if getattr(local_activity, attr) != getattr(srv_activity, attr):
+                        changes.append(attr)
+                if len(changes):
+                    log.debugf(DEBUG_ACTIVITYMGR, "Updating local copy of activity, changed columns %s,  %s" % (changes, str(srv_activity).replace("\n", " ")))
+                    local_activity.name = srv_activity["name"]
+                    local_activity.server_id = srv_activity["_id"]
+                    local_activity.active = srv_activity["active"]
                     try:
-                        self.basium.store(local_activity)
-                    except basium.Error as err:
+                        self.localdb.update("activity", d=local_activity, primary_key="_id")
+                    except db.DbException as err:
                         log.error("Cannot update local activity %s" % err)
                         return
             else:
@@ -142,15 +152,19 @@ class ActivityMgr(QtCore.QObject):
                 srv_activity.server_id = srv_activity._id
                 srv_activity._id = -1
                 try:
-                    self.basium.store(srv_activity)
-                except basium.Error as err:
+                    self.localdb.insert("activity", d=srv_activity, primary_key="_id")
+                except db.DbException as err:
                     log.error("Cannot store new activity in local database %s" % err)
                     return
 
         self._loadList()
         self.sig.emit()
     
+    
     def run(self):
+        """
+        Runs as a separate thread
+        """
         log.debugf(DEBUG_ACTIVITYMGR, "Starting activitymgr thread")
         
         while True:
@@ -163,13 +177,9 @@ class ActivityMgr(QtCore.QObject):
                 
                 # connect to database, we have a separate connection in this thread to 
                 # simplify database operations
-                tmp, self.basium = util.openLocalDatabase()
-                tmp, self.remote_db = util.openRemoteDatabase()
+                self.localdb = util.openLocalDatabase2()
 
                 self._do_sync()
-
-#                self.srv_db.close()        # when basium supports close()
-#                self.local_db.close()      # when basium supports close()
             else:
                 log.error("activitymgr thread, unknown command %s" % req)
 
@@ -177,35 +187,17 @@ class ActivityMgr(QtCore.QObject):
 if __name__ == '__main__':
     """Unit test"""
     import time
+    from PyQt5.Qt import QApplication
     
     app = createQApplication()
 
-    class Util:
-        """Dummy database in memory for tests"""
-        
-        def openDatabase(self, s):
-            log.debug("Opening %s database :memory:" % s)
-            dbconf = basium.DbConf(database=":memory:")
-            db = basium.Basium(logger=log, driver="sqlite", checkTables=True, dbconf=dbconf)
-            db.addClass(Activity)
-            if not db.start():
-                log.error("Cannot open database")
-                exit(1)
-            return dbconf, db
-            
-        def openLocalDatabase(self):
-            return self.openDatabase("local")
-        
-        def openRemoteDatabase(self):
-            return self.openDatabase("remote")
-
-    util = Util()
-    tmp, local_db = util.openLocalDatabase() 
+    localdb = util.openLocalDatabase2(":memory:")
     
-    activityMgr = ActivityMgr(main_db=local_db, util=util)
+    activityMgr = ActivityMgr(localdb=localdb)
     activityMgr.init()
     activityMgr.sync()
     activityMgr.stop()
 
     while not activityMgr.toThreadQ.empty():
         QApplication.processEvents()
+        time.sleep(0.5)
