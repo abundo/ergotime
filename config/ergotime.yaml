@@ -1,0 +1,8 @@
+basedir: '/opt/ergotime'
+etcdir: '/etc/ergotime'
+
+db_conf:
+  host: '127.0.0.1'
+  user: 'ergotime_user'
+  pass: 'secret'
+  name: 'ergotime'

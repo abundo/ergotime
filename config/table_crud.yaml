@@ -1,0 +1,124 @@
+---
+activity:
+  title: Activity
+  primary_key: _id
+  columns:
+  - name: _id
+    type: text
+    title: ID
+    edit: false
+  - name: name
+    type: text
+    title: Name
+    edit: true
+    search: true
+  - name: active
+    type: checkbox
+    title: Active
+    edit: true
+  - name: description
+    type: text
+    title: Description
+    edit: true
+    search: true
+  - name: project_id
+    type: text
+    title: Project ID
+    edit: true
+    search: true
+  - name: server_id
+    type: text
+    title: Server ID
+    edit: true
+  sortdata:
+  -  name: name
+     direction: 'ASC'
+
+project:
+  title: Projects
+  primary_key: _id
+  columns:
+  - name: _id
+    type: text
+    title: ID
+    edit: false
+  - name: activityid
+    type: text
+    title: ID
+    edit: true
+  - name: name
+    type: text
+    title: Name
+    edit: true
+  - name: costcenter
+    type: text
+    title: Cost center
+    edit: true
+  - name: active
+    type: checkbox
+    title: Active
+    edit: true
+  sortdata:
+  -  name: name
+     direction: 'ASC'
+
+report:
+  title: Reports
+  primary_key: _id
+  columns:
+  - name: _id
+    type: text
+    title: ID
+    edit: false
+  - name: activityid
+    type: text
+    title: Activity ID
+    edit: false
+  - name: start
+    type: date
+    title: Start
+    edit: true
+  - name: stop
+    type: text
+    title: Stop
+    edit: true
+  - name: commment
+    type: text
+    title: Comment
+    edit: true
+  - name: user_id
+    type: text
+    title: User ID
+    edit: true
+  - name: modified
+    type: text
+    title: Modified
+    edit: true
+  sortdata:
+  -  name: start
+     direction: 'ASC'
+
+users:
+  title: Users
+  primary_key: _id
+  columns:
+  - name: _id
+    type: text
+    title: ID
+    edit: false
+  - name: name
+    type: text
+    title: Name
+    edit: true
+  - name: password
+    type: text
+    title: Password
+    edit: true
+  - name: active
+    type: checkbox
+    title: Active
+    edit: true
+  sortdata:
+  -  name: name
+     direction: 'ASC'
+     

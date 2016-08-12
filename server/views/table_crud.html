@@ -1,0 +1,152 @@
+{% extends "base.html" %} {% block title %}Table {{ data['table'] }}{% endblock
+title %} {% block head %} {{ super() }}
+<link rel="stylesheet" type="text/css"
+    href="/static/css/w2ui-1.4.3.min.css" />
+<script type="text/javascript" src="/static/js/w2ui-1.4.3.min.js"></script>
+{% endblock head %} {% block content %}
+
+<h3>{{ data['title'] }}</h3>
+<div id="grid1" style="width: 100%; height: 500px;"></div>
+
+<script>
+
+function addEditPopup (sel_recid, records) {
+    if (w2ui.form1) {
+        w2ui.form1.destroy();
+    }
+    if (!w2ui.form1) {
+        $().w2form({
+            name: 'form1',
+            url: data['url'] + data['params'],
+            recid: sel_recid,
+            style: 'border: 0px; background-color: transparent;',
+            formHTML: 
+                '<div class="w2ui-page page-0">'+
+{% for col in columns -%}
+                '    <div class="w2ui-field">'+
+                '        <label>{{ col['title'] }}</label>'+
+                '        <div>'+
+                '           <input name="{{ col['name'] }}" type="text"  maxlength="100" style="width: 250px"/>'+
+                '        </div>'+
+                '    </div>'+
+{% endfor -%}
+                '</div>'+
+                '<div class="w2ui-buttons">'+
+                '    <button class="btn" name="reset">Reset</button>'+
+                '    <button class="btn" name="save">Save</button>'+
+                '</div>',
+            fields: [
+                {% for col in columns -%}
+                { field: '{{ col['name'] }}', type: 'text' },
+                {% endfor -%}
+            ],
+            actions: {
+                "save": function () { 
+                    this.validate();
+                    this.save();
+                    w2popup.close();
+                    // Can't explain why we need to wait before doing reload
+                    setTimeout( function() { w2ui.grid1.reload(); }, 1000);
+                    // w2ui.form1.destroy();
+                },
+                "reset": function () { this.clear(); },
+            }
+        });
+    }
+    $().w2popup('open', {
+        name    : 'popup1',
+        title   : 'New/change table row',
+        body    : '<div id="form" style="width: 100%; height: 100%;"></div>',
+        style   : 'padding: 15px 0px 0px 0px',
+        width   : 800,
+        height  : 500,
+        showMax : true,
+        onToggle: function (event) {
+            $(w2ui.form1.box).hide();
+            event.onComplete = function () {
+                $(w2ui.form1.box).show();
+                w2ui.form1.resize();
+            }
+        },
+        onOpen: function (event) {
+            event.onComplete = function () {
+                // specifying an onOpen handler instead is equivalent to
+                // specifying an onBeforeOpen handler, which would make
+                // this code execute too early and hence not deliver.
+                $('#w2ui-popup #form').w2render('form1');
+            }
+        },
+        onClose: function(event) {
+//          w2ui.form1.destroy();
+        },
+        
+    });
+}
+
+
+$(function () {
+    w2utils.settings['dataType'] = 'JSON';
+    data = $.parseJSON( '{{datajson | safe}}' );
+
+    columns = [];
+    searches = [];
+    sortData = [];
+    
+    $.each(data['columns'], function(ix, column) {
+        c = {
+            field: column['field'],
+            caption: column['caption'],
+            type: column['type'],
+        };
+        searches.push(c);
+        c['size'] = "30%";
+        c['sortable'] = column['sortable'];
+        c['editable'] = { type: column['type'] };
+        columns.push(c);
+    });
+    
+    $.each( data['sortdata'], function(ix, sortd) {
+        c = {
+            field: sortd['field'],
+            direction: sortd['direction'],
+        }
+        sortData.push(c);
+    });
+    
+    $('#grid1').w2grid({
+//        name: data['table'],
+        name: "grid1",
+        url: data['url'] + data['params'],
+        show: {
+            toolbar: true,
+            footer: true,
+            toolbarAdd: true,
+            toolbarDelete: true,
+            toolbarSave: true,
+            toolbarEdit: true            
+        },
+        multiSelect: false,
+        recid: data['primary_key'],
+        header: 'Table ' + data['table'],
+        searches: searches,
+        sortData: sortData,
+        columns: columns,
+        
+        onAdd: function (event) {
+            addEditPopup(-1);
+        },
+        
+        onEdit: function (event) {
+            addEditPopup(this.last.sel_recid, this.records);
+        },
+        
+        onDelete: function (event) {
+        },
+    });
+});
+
+{# datagrid.render_js() | safe #}
+
+ </script>
+
+{% endblock content %}

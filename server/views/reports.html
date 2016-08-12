@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Ergotime timereport{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+{{ super() }}
+<form method='get'>
+User:
+{{ htmllib.getUserCombo(name='userid', selected=p.userid)|safe }}
+
+Activity:
+{{ htmllib.getActivityCombo(name='activityid', selected=p.activityid, additional=[[-1, "[All]"]])|safe }}
+<input type='submit' name='action' value='-A' >
+<input type='submit' name='action' value='Update' />
+<input type='submit' name='action' value='+A' >
+
+Month <input type='text' name='start' value='{{ p.dstart.strYM() }}' />
+<input type='button' onclick="parent.location='?start={{p.prevstart.strYM()}}{{p.param}}'" value='-1'>
+<input type='button' onclick="parent.location='?start={{p.nowstart.strYM()}}{{p.param}}'" value='Now'>
+<input type='button' onclick="parent.location='?start={{p.nextstart.strYM()}}{{p.param}}'" value='+1'>
+Debug:
+{{ htmllib.checkBox(name='debug', value=p.debug)|safe }}
+</form>
+
+<hr>
+{% for activityMonth in activities.activityMonth %}
+
+<h1>{{ activityMonth.description }}</h1>
+<strong>Period {{ activityMonth.periodStart.strYMD() }} to {{ activityMonth.periodStop.strYMD() }}</strong >
+<p>
+<table class='table table-condensed table-striped'>
+<thead>
+<tr>
+ <th class='text-right col-md-1' style='width:1%'>Date</th>
+ <th class='text-right col-md-1' style='width:1%'>Start</th>
+ <th class='text-right col-md-1' style='width:1%'>Stop</th>
+ <th class='text-right col-md-1' style='width:1%'>Time</th>
+ <th class='col-md-8'>Comment</th>
+</tr>
+</thead>
+{% for activityDay in activityMonth.days %}
+{% for report in activityDay.reports %}
+<tr valign='top'>
+{% if loop.first %}
+<td  class='text-right' style='white-space: nowrap'>{{report.start.strftime('%Y-%m-%d')}}</td>
+{% else %}
+    <td>&nbsp;</td>
+{% endif %}
+<td class='text-right' style='white-space: nowrap'>{{ report.start.strftime('%H:%M') }}</td>
+<td class='text-right' style='white-space: nowrap'>{{ report.stop.strftime('%H:%M') }}</td>
+<td class='text-right' style='white-space: nowrap'>{{ report.strLength() }}</td>
+
+{% set tmp = '' %}
+<td class='text-left' >
+{% if report.comment != None %}
+{% set tmp = report.comment.replace('\n', '<br>\n') %}
+{% for tmp in report.comment.split('\n') %}
+{{ tmp }}<br>
+{% endfor %}
+</td>
+</tr>
+{% endif %}
+{% endfor %}
+
+<tr>
+ <td>&nbsp;</td>
+ <td>&nbsp;</td>
+ <td>&nbsp;</td>
+ <td class='text-right' style='white-space: nowrap'>{{ activityDay.strTotal() }}</td> 
+ <td><strong>Day total</strong></td>
+</tr>
+
+{% endfor %}
+</table>
+<p>
+Total for period: {{ activityMonth.strTotal(includeDecimal=True) }}<br>
+<p>
+<br>
+{% endfor %}
+
+<hr>
+Total reported time for period: {{ activities.strTotal() }}<br>               
+{% endblock %}
