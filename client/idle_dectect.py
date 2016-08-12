@@ -58,7 +58,38 @@ if platform.system() == "Windows":
     lastInputInfo = LASTINPUTINFO()
     lastInputInfo.cbSize = sizeof(lastInputInfo)
 
+elif platform.system() == "Linux":
+    
+    def getIdle():
+        return 0
+
 else:
 
     def getIdle():
         return 0
+
+
+if __name__ == '__main__':
+    print("Some test code for Linux idle detect")
+    import ctypes
+    import struct
+    
+    # libraries
+    xlib = ctypes.cdll.LoadLibrary("libX11.so")
+    xss  = ctypes.cdll.LoadLibrary("libXss.so")
+    
+    # functions
+    XScreenSaverAllocInfo = xss.XScreenSaverAllocInfo
+    XOpenDisplay          = xlib.XOpenDisplay
+    XScreenSaverQueryInfo = xss.XScreenSaverQueryInfo
+    XDefaultRootWindow    = xlib.XDefaultRootWindow
+    
+    # let ctypes assume defaults for all these return values, as it doesn't matter really...
+    # production code might want to not hardcode the offset 16...
+    display = XOpenDisplay( ctypes.c_int(0) )
+    info    = XScreenSaverAllocInfo()
+    XScreenSaverQueryInfo( display, XDefaultRootWindow( display ), info )
+    time    = bytes( ctypes.cast( info, ctypes.POINTER( ctypes.c_ubyte ) )[16:20] )
+    time    = struct.unpack("@L", time)[0]
+    print( "%.03f sec" % ( time / 1000.0 ) )
+    

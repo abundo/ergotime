@@ -41,9 +41,6 @@ from settings import sett
 import db
 
 def openLocalDatabase2(dbname=None):
-    if dbname == None:
-        dbname="c:/temp/ergotime.db"
-    # dbconf = { 'name': localDatabaseName }
     dbconf = { 'name': dbname }
     conn = db.Database(dbconf, driver="sqlite")
     conn.connect()
