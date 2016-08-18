@@ -28,6 +28,7 @@ class Database:
         
         self.conn = None
         self.cursor = None
+        self.dbexception = DbException
 
         if not self.driver in ["psql", "mysql", "sqlite"]: 
             raise ValueError("Driver type '%s' not implemented" % self.driver)
