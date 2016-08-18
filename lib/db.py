@@ -32,9 +32,11 @@ class Database:
 
         if not self.driver in ["psql", "mysql", "sqlite"]: 
             raise ValueError("Driver type '%s' not implemented" % self.driver)
-        if not driver in ["psql", "mysql", "sqlite"]: 
-            raise ValueError("Driver type not implemented (%s)" % self.driver)
         
+        self.valueholder = "%s"
+        if self.driver == "sqlite":
+            self.valueholder = "?"
+            
 
     def connect(self):
         if self.conn:
@@ -165,7 +167,9 @@ class Database:
             columns.append(colname)
             values.append(d[colname])
         sql = "INSERT into %s (%s) VALUES (%s)" %\
-            (table, ",".join(columns), ",".join(["?"] * len(values) ) )
+            (table, 
+             ",".join(columns), 
+             ",".join([self.valueholder] * len(values) ) )
         if primary_key and self.driver == "psql":
             sql += " RETURNING %s" % primary_key
         print("sql", sql)
@@ -197,9 +201,10 @@ class Database:
         for colname in set(d.keys()) - set(exclude):
             columns.append(colname)
             values.append(d[colname])
+        fstr = "{!s}=%s" % self.valueholder
         sql = "UPDATE %s SET %s" %\
-            (table, ",".join("{!s}=?".format(colname) for colname in columns))
-        sql += " WHERE %s=?" % primary_key
+            (table, ",".join(fstr.format(colname) for colname in columns))
+        sql += " WHERE %s=%s" % (primary_key, self.valueholder)
         values.append(d[primary_key])
         self.execute(sql, values, commit=commit)
 
