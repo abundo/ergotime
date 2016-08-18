@@ -247,3 +247,5 @@ class Database:
         for ix in range(0, len(rows)):
             rows[ix] = AttrDict(rows[ix])
         return rows
+
+conn = None
