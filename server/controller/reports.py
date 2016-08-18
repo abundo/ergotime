@@ -35,8 +35,11 @@ import datetime
 from orderedattrdict import AttrDict
 
 import lib.log as log
+import lib.util as util # read settings
 import lib.db as db2
 import lib.htmllib
+
+db2.conn = db2.Database(config["db_conf"])
 
 htmllib = lib.htmllib.Htmllib(db2.conn)
 

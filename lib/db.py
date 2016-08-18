@@ -1,8 +1,3 @@
-'''
-Created on 7 maj 2016
-
-@author: anders
-'''
 #!/usr/bin/env python3
 
 """
@@ -26,11 +21,16 @@ class Database:
     """
     def __init__(self, db_conf, driver=None):
         self.db_conf = db_conf
-        self.driver = driver
+        if "driver" in self.db_conf:
+            self.driver = self.db_conf["driver"]
+        else:
+            self.driver = driver
         
         self.conn = None
         self.cursor = None
 
+        if not self.driver in ["psql", "mysql", "sqlite"]: 
+            raise ValueError("Driver type '%s' not implemented" % self.driver)
         if not driver in ["psql", "mysql", "sqlite"]: 
             raise ValueError("Driver type not implemented (%s)" % self.driver)
         

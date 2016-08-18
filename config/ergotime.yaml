@@ -6,3 +6,5 @@ db_conf:
   user: 'ergotime_user'
   pass: 'secret'
   name: 'ergotime'
+  driver: 'psql'
+
