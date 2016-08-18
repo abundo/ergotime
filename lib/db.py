@@ -113,7 +113,7 @@ class Database:
         """
         self.conn.rollback()
 
-    def execute(self, sql, values=None, commit=True):
+    def execute(self, sql, values=None):
         """
         Execute a query,
         if error try to reconnect and redo the query to handle timeouts, connection issues
@@ -126,8 +126,6 @@ class Database:
                     self.cursor.execute(sql, values)
                 else:
                     self.cursor.execute(sql)
-                if commit:
-                    self.conn.commit()
                 return
             except self.dbexception as e:
                 if i < 2:
@@ -136,7 +134,7 @@ class Database:
     
     def last_insert_id(self):
         key = "LAST_INSERT_ID()"
-        rows = self.execute(key, commit=False)
+        rows = self.execute(key)
         if len(rows):
             row = rows[0]
             if key in row:
@@ -173,7 +171,7 @@ class Database:
         if primary_key and self.driver == "psql":
             sql += " RETURNING %s" % primary_key
         
-        self.execute(sql, values, commit=False)
+        self.execute(sql, values)
         if self.driver == "mysql":
             id_ = self.last_insert_id()
         elif self.driver == "psql":
@@ -204,10 +202,14 @@ class Database:
             (table, ",".join(fstr.format(colname) for colname in columns))
         sql += " WHERE %s=%s" % (primary_key, self.valueholder)
         values.append(d[primary_key])
-        self.execute(sql, values, commit=commit)
+        self.execute(sql, values)
+        if commit:
+            self.commit()
 
     def delete(self, sql=None, values=None, commit=True):
-        self.execute(sql, values, commit=commit)
+        self.execute(sql, values)
+        if commit:
+            self.commit()
         if self.driver == "mysql":
             pass
         elif self.driver == "psql":
@@ -220,7 +222,7 @@ class Database:
         """
         Returns a dict, or None if not found
         """
-        self.execute(sql, values, commit=False)
+        self.execute(sql, values)
         row = self.cursor.fetchone()
         if commit:
             self.commit()
@@ -232,7 +234,7 @@ class Database:
         """
         Returns a list of dicts
         """
-        self.execute(sql, values, commit=False)
+        self.execute(sql, values)
         rows = self.cursor.fetchall()
         if commit:
             self.commit()
