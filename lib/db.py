@@ -141,13 +141,19 @@ class Database:
                 return row[key]
         return None
     
-    def count(self, sql, commit=True):
-        key = "ROW_COUNT()"
-        rows = self.execute(key, commit=False)
+    def count(self, sql, values=None, commit=True):
+        self.execute(sql, values)
+        row = self.cursor.fetchone()
         if commit:
             self.commit()
-        if len(rows):
-            row = rows[0]
+        if row:
+            if self.driver == "mysql":
+                key = 'count(*)'
+            elif self.driver == "psql":
+                key = 'count'
+            elif self.driver == "sqlite":
+                key = "?"
+            
             if key in row:
                 return row[key]
         return None
