@@ -72,7 +72,9 @@ class Database:
             import sqlite3
             self.dbexception = sqlite3.Error
             
-            self.conn = sqlite3.connect(self.db_conf["name"],  check_same_thread=False, detect_types=sqlite3.PARSE_DECLTYPES)
+            self.conn = sqlite3.connect(self.db_conf["name"], 
+                                        check_same_thread=False, 
+                                        detect_types=sqlite3.PARSE_DECLTYPES)
             self.conn.row_factory = sqlite3.Row   # return querys as dictionaries
             self.cursor = self.conn.cursor()
 
@@ -114,7 +116,7 @@ class Database:
     def execute(self, sql, values=None, commit=True):
         """
         Execute a query,
-        if error try to reconnect and redo the query to handle timeouts
+        if error try to reconnect and redo the query to handle timeouts, connection issues
         """
         # print("execute", "\n    sql   :", sql, "\n    values:", values)
         for i in range(0, 2):
@@ -172,8 +174,6 @@ class Database:
              ",".join([self.valueholder] * len(values) ) )
         if primary_key and self.driver == "psql":
             sql += " RETURNING %s" % primary_key
-        print("sql", sql)
-        print("values", values)
         
         self.execute(sql, values, commit=False)
         if self.driver == "mysql":
