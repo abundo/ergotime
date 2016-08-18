@@ -129,8 +129,6 @@ class Database:
                 if commit:
                     self.conn.commit()
                 return
-            # except pymysql.MySQLError as e:
-#            except psycopg2.Error as e:
             except self.dbexception as e:
                 if i < 2:
                     raise DbException(str(e))
