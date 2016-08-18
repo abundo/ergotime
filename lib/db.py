@@ -122,7 +122,7 @@ class Database:
         for i in range(0, 2):
             self.connect()
             try:
-                if values is not None:
+                if values:
                     self.cursor.execute(sql, values)
                 else:
                     self.cursor.execute(sql)
