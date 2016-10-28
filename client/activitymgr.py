@@ -119,7 +119,7 @@ class ActivityMgr(QtCore.QObject):
         # Get list of all activities on server
         try:
             srv_activities, tmp = network.request("GET", "%s/api/activity" % sett.server_url, decode=True)
-        except db.DbException as err:
+        except network.NetworkException as err:
             log.error("Cannot load list of activities from server %s" % err)
             return
 #        print("srvactivities", srvactivities)

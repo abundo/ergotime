@@ -259,7 +259,7 @@ the trigger is configured like this
             local_report.updated = 0
             try:
                 network.request("PUT", url="%s/%s" % (reportapi, local_report._id), data=local_report)
-            except db.DbException as err:
+            except network.NetworkException as err:
                 log.error("  Cannot send new report to server, %s" % err)
                 return
             try:
@@ -301,7 +301,7 @@ the trigger is configured like this
                 url = "%s/sync/%s" % (reportapi, local_max_seq)  # todo, maxage from settings
                 param = { "limit": step, "offset": offset, "maxage": 180 }
                 srv_reports, tmp = network.request("GET", url=url, param=param, decode=True)
-            except db.DbException as err:
+            except network.NetworkException as err:
                 log.error("  Can't get new/updated reports from server, %s" % err)
                 break
 
