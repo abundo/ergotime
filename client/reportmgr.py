@@ -199,7 +199,6 @@ the trigger is configured like this
 
 """
         reportapi = "%s/api/report" % sett.server_url
-
         log.debugf(DEBUG_REPORTMGR, "Sync() Send deleted reports to server")
         try:
             sql = "SELECT * FROM report WHERE deleted=1"
@@ -290,13 +289,6 @@ the trigger is configured like this
         self.reports.clear()            # clear cache, we may get new data from server
         error = False
         while True and not error:
-#            srv_query = self.srv_db.query()
-#            srv_query.filter(r.q.seq, ">", local_max_seq)
-#            if modified:
-#                srv_query.filter(r.q.modified, ">", modified)
-#            srv_query.order(r.q._id)
-#            srv_query.limit(offset=offset, rowcount=step)
-#            log.debugf(DEBUG_REPORTMGR, "query " + srv_query.encode())
             try:
                 url = "%s/sync/%s" % (reportapi, local_max_seq)  # todo, maxage from settings
                 param = { "limit": step, "offset": offset, "maxage": 180 }
@@ -402,7 +394,9 @@ the trigger is configured like this
                 return
 
             elif req[0] == "sync":
+                log.info("Sync reports with server started")
                 self._do_sync()
+                log.info("Sync reports with server finished")
             else:
                 log.error(DEBUG_REPORTMGR, "reportmgr thread, unknown command %s" % req[0])
 
