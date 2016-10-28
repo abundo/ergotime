@@ -70,7 +70,7 @@ class MySettings(QtCore.QObject):
     
     report_sync_interval   = AttrTypDefault(int, 600)
     
-    server_url             = AttrTypDefault(str, "http://ergotime.int.abundo.se:8000/")
+    server_url             = AttrTypDefault(str, "http://ergotime.int.abundo.se")
     networkTimeout         = AttrTypDefault(int, 60)
 
     localDatabaseName      = localDatabaseName
