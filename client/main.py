@@ -656,7 +656,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             if report.deleted:
                 s +="to be removed "
             self.lblReportSyncState.setText(s)
-            if report.activityid:
+            if report.activityid >= 0:
                 self.comboReportActivity.setCurrentIndex(self.comboReportActivity.findData(report.activityid))
                 # self.comboReportProject.setCurrentIndex()
             if report.start != None:
