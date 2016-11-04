@@ -375,7 +375,6 @@ the trigger is configured like this
                     except db.DbException as err:
                         log.error("  Can't update highest seq in local database %s" % err)
 
-        log.debugf(DEBUG_REPORTMGR, "Sync() done")
         self.sig.emit()
 
     def runThread(self):
