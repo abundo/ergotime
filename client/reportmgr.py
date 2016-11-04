@@ -80,7 +80,7 @@ class ReportMgr(QtCore.QObject):
     def getList(self, start=None):
         stop = start + datetime.timedelta(days=1)
         try:
-            sql = "SELECT * FROM report WHERE start >= ? AND stop < ? ORDER BY start"
+            sql = "SELECT * FROM report WHERE start >= ? AND start < ? ORDER BY start"
             reports = self.localdb.select_all(sql, (start, stop))
             self.reports.clear()
             for r in reports:
