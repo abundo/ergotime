@@ -48,14 +48,14 @@ DEBUG_MAINWIN           = 1 << 5
 DEBUG_OPTIONS           = 1 << 6
 DEBUG_SYSTRAY           = 1 << 7
 
-DEBUG = 0
-DEBUG |= DEBUG_FILES       * 1
-DEBUG |= DEBUG_SETTINGS    * 0
-DEBUG |= DEBUG_ACTIVITYMGR * 1
-DEBUG |= DEBUG_REPORTMGR   * 1
-DEBUG |= DEBUG_MAINWIN     * 1
-DEBUG |= DEBUG_OPTIONS     * 1
-DEBUG |= DEBUG_SYSTRAY     * 1
+DEBUG_LEVEL = 0
+DEBUG_LEVEL |= DEBUG_FILES       * 1
+DEBUG_LEVEL |= DEBUG_SETTINGS    * 0
+DEBUG_LEVEL |= DEBUG_ACTIVITYMGR * 1
+DEBUG_LEVEL |= DEBUG_REPORTMGR   * 1
+DEBUG_LEVEL |= DEBUG_MAINWIN     * 1
+DEBUG_LEVEL |= DEBUG_OPTIONS     * 1
+DEBUG_LEVEL |= DEBUG_SYSTRAY     * 1
 
 # ----------------------------------------------------------------------
 
@@ -71,7 +71,7 @@ if not os.path.exists(userdir):
 
 userconffile = userdir + os.sep + "ergotime.ini" 
 
-if DEBUG & DEBUG_FILES:
+if DEBUG_LEVEL & DEBUG_FILES:
     localDatabaseName = "ergotime-devel.db" # todo find out automatically if we are running from the IDE
 else:
     localDatabaseName = "ergotime.db"
