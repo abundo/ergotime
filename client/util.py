@@ -44,6 +44,7 @@ def openLocalDatabase2(dbname=None):
     dbconf = { 'name': sett.localDatabaseName }
     conn = db.Database(dbconf, driver="sqlite")
     conn.connect()
+    log.info("Open local database %s" % dbconf)
 
     sql  = "CREATE TABLE IF NOT EXISTS report ("
     sql += "  _id         INTEGER PRIMARY KEY, "
