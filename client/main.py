@@ -608,6 +608,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         report.seq = 0
         report.deleted = False
         report.updated = False
+        report.modified = datetime.datetime(1990,1,1)
         return report
     
     @property
@@ -698,7 +699,6 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         # todo project
         self._reportDetail.start = self.dtReportStart.dateTime().toPyDateTime().replace(microsecond=0)
         self._reportDetail.stop = self.dtReportStop.dateTime().toPyDateTime().replace(microsecond=0)
-        self._reportDetail.modified = datetime.datetime.now().replace(microsecond=0)
         self._reportDetail.comment = self.txtReportComment.toPlainText()
         if self._reportDetail.comment == None:
             self._reportDetail.comment = ""
