@@ -85,7 +85,7 @@ class ActivityMgr(QtCore.QObject):
                 log.error("Cant save activity in local database, %s" % err)
         
     def _loadList(self):
-        sql = "SELECT * FROM activity ORDER BY name"
+        sql = "SELECT * FROM activity ORDER BY active desc,name"
         activities = self.localdb.select_all(sql)
         
         self.activities.clear()
