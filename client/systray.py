@@ -63,17 +63,22 @@ class Systray(QtWidgets.QWidget):
 
 
     def activityListUpdated(self):
-        """Called when the list of activities has been updated, usually after sync with server"""
+        """
+        Called when the list of activities has been updated, 
+        usually after sync with server
+        We only show active activities to make the list shorter
+        """
         trayiconmenu = QtWidgets.QMenu()
         
         for activity in self.activitymgr.getList():
-            action = QtWidgets.QAction(self)
-            action.setText(activity.name)
-            action.setData(activity._id)
-            action.setCheckable(True)
-            # connect
-            action.triggered.connect(self.setAction)
-            trayiconmenu.addAction(action)
+            if activity.active:
+                action = QtWidgets.QAction(self)
+                action.setText(activity.name)
+                action.setData(activity._id)
+                action.setCheckable(True)
+                # connect
+                action.triggered.connect(self.setAction)
+                trayiconmenu.addAction(action)
         
         trayiconmenu.addSeparator()
         trayiconmenu.addAction(self.noaction)
