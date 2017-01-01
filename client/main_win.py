@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'D:\hack\git\ergotime\client\main_win.ui'
+# Form implementation generated from reading ui file 'D:\hack\eclipse\ergotime\client\main_win.ui'
 #
-# Created by: PyQt5 UI code generator 5.4.1
+# Created by: PyQt5 UI code generator 5.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -70,8 +70,8 @@ class Ui_Main(object):
         self.groupBox.setSizePolicy(sizePolicy)
         self.groupBox.setObjectName("groupBox")
         self.horizontalLayout_10 = QtWidgets.QHBoxLayout(self.groupBox)
-        self.horizontalLayout_10.setSpacing(3)
         self.horizontalLayout_10.setContentsMargins(3, 3, 3, 3)
+        self.horizontalLayout_10.setSpacing(3)
         self.horizontalLayout_10.setObjectName("horizontalLayout_10")
         self.txtCurrentComment = QtWidgets.QTextEdit(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -151,8 +151,8 @@ class Ui_Main(object):
         self.groupBox_3.setFlat(False)
         self.groupBox_3.setObjectName("groupBox_3")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.groupBox_3)
-        self.verticalLayout_3.setSpacing(6)
         self.verticalLayout_3.setContentsMargins(9, 9, 9, 9)
+        self.verticalLayout_3.setSpacing(6)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")

@@ -139,7 +139,7 @@ class Log(QtCore.QObject):
         """
         Show debug message, if debug for this type is enabled
         """
-        if DEBUG & mask:
+        if DEBUG_LEVEL & mask:
             self.logTrigger.emit(_DEBUG, threading.current_thread().getName(), msg)
 
     def write(self, msg):

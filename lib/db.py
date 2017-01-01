@@ -148,14 +148,11 @@ class Database:
             self.commit()
         if row:
             if self.driver == "mysql":
-                key = 'count(*)'
+                return row['count(*)']
             elif self.driver == "psql":
-                key = 'count'
+                return row['count']
             elif self.driver == "sqlite":
-                key = "?"
-            
-            if key in row:
-                return row[key]
+                return row[0]
         return None
 
     def insert(self, table=None, d=None, primary_key="_id", exclude=[], commit=True):

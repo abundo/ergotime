@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'D:\hack\git\ergotime\client\options_win.ui'
+# Form implementation generated from reading ui file 'D:\hack\eclipse\ergotime\client\options_win.ui'
 #
-# Created by: PyQt5 UI code generator 5.4.1
+# Created by: PyQt5 UI code generator 5.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ class Ui_Options(object):
     def setupUi(self, Options):
         Options.setObjectName("Options")
         Options.setWindowModality(QtCore.Qt.WindowModal)
-        Options.resize(532, 383)
+        Options.resize(1011, 450)
         self.verticalLayout = QtWidgets.QVBoxLayout(Options)
         self.verticalLayout.setObjectName("verticalLayout")
         self.tabWidget = QtWidgets.QTabWidget(Options)
@@ -165,14 +165,14 @@ class Ui_Options(object):
         self.label_5.setText(_translate("Options", "Log Level"))
         self.label_4.setText(_translate("Options", "Database directory"))
         self.label.setText(_translate("Options", "Font"))
-        self.label_3.setText(_translate("Options", "Idle timeout"))
+        self.label_3.setText(_translate("Options", "Idle timeout, seconds"))
         self.label_6.setText(_translate("Options", "Password"))
         self.txtPassword.setToolTip(_translate("Options", "If empty, user will be prompted for the password"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Options", "General"))
-        self.label_7.setText(_translate("Options", "Periodic sync interval"))
+        self.label_7.setText(_translate("Options", "Periodic sync interval, in seconds"))
         self.spinActivitySyncInterval.setToolTip(_translate("Options", "If zero, disabled"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Options", "Activity"))
-        self.label_8.setText(_translate("Options", "Periodic sync interval"))
+        self.label_8.setText(_translate("Options", "Periodic sync interval, in seconds"))
         self.spinReportSyncInterval.setToolTip(_translate("Options", "If zero, disabled"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Options", "Report"))
         self.label_9.setText(_translate("Options", "Server URL"))

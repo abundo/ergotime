@@ -119,7 +119,7 @@ class ActivityMgr(QtCore.QObject):
         # Get list of all activities on server
         try:
             srv_activities, tmp = network.request("GET", "%s/api/activity" % sett.server_url, decode=True)
-        except db.DbException as err:
+        except network.NetworkException as err:
             log.error("Cannot load list of activities from server %s" % err)
             return
 #        print("srvactivities", srvactivities)
@@ -148,13 +148,13 @@ class ActivityMgr(QtCore.QObject):
                         return
             else:
                 # new activity
-                log.debugf(DEBUG_ACTIVITYMGR, "New activity '%s' on server, storing in local database" % srv_activity.name)
+                log.debugf(DEBUG_ACTIVITYMGR, "New activity '%s' on server, saving in local database" % srv_activity.name)
                 srv_activity.server_id = srv_activity._id
                 srv_activity._id = -1
                 try:
                     self.localdb.insert("activity", d=srv_activity, primary_key="_id")
                 except db.DbException as err:
-                    log.error("Cannot store new activity in local database %s" % err)
+                    log.error("Cannot save new activity in local database %s" % err)
                     return
 
         self._loadList()

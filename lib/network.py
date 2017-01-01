@@ -45,7 +45,7 @@ def request(method='GET', url=None, param=None, data=None, decode=False):
             resp = urllib.request.urlopen(req, urllib.parse.urlencode(data, encoding="utf-8").encode("ascii") )
         else:
             resp = urllib.request.urlopen(req)
-    except urllib.error as err:
+    except urllib.error.URLError as err:
         raise NetworkException(err)
 
     if decode:
