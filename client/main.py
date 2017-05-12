@@ -157,16 +157,16 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
     def _closeHandler(self):
         msgBox = QtWidgets.QMessageBox(parent=self)
 
-        if not runFromIde:
-            # is there an current activity? it needs to be stopped and saved
-            if self.timetracker.state == self.timetracker.stateActive:
-                msgBox.setText("There is an active activity, do you want to save this as a report?")
-                msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
-                response = msgBox.exec_()
-                if response != QtWidgets.QMessageBox.Yes:
-                    self.timetracker.setStateInactive()
+        # is there an current activity? it needs to be stopped and saved
+        if self.timetracker.state == self.timetracker.stateActive:
+            msgBox.setText("There is an activity running, do you want to save this as a report?")
+            msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
+            response = msgBox.exec_()
+            if response != QtWidgets.QMessageBox.Yes:
+                self.timetracker.setStateInactive()
                 
+        if not runFromIde:
             # do we have unsyncronised local changes?
             count = self.reportmgr.getUnsyncronisedCount()
             if count > 0:
