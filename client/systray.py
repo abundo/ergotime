@@ -67,13 +67,14 @@ class Systray(QtWidgets.QWidget):
         trayiconmenu = QtWidgets.QMenu()
         
         for activity in self.activitymgr.getList():
-            action = QtWidgets.QAction(self)
-            action.setText(activity.name)
-            action.setData(activity._id)
-            action.setCheckable(True)
-            # connect
-            action.triggered.connect(self.setAction)
-            trayiconmenu.addAction(action)
+            if activity.active:
+                action = QtWidgets.QAction(self)
+                action.setText(activity.name)
+                action.setData(activity._id)
+                action.setCheckable(True)
+                # connect
+                action.triggered.connect(self.setAction)
+                trayiconmenu.addAction(action)
         
         trayiconmenu.addSeparator()
         trayiconmenu.addAction(self.noaction)
