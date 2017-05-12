@@ -176,13 +176,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
                 response = msgBox.exec_()
                 if response != QtWidgets.QMessageBox.Yes:
                     self.reportmgr.sync()
-            
-            msgBox.setText("Do you want to exit the application?")
-            msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
-            response = msgBox.exec_()
-            if response != QtWidgets.QMessageBox.Yes:
-                return False
+                    # todo, wait for sync done
             
         self._saveWindowPosition();
         self.activitymgr.stop()
