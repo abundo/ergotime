@@ -308,7 +308,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
 
     def _currentReportStart(self):
         self.report = self._getNewReport()
-        self.report.start = datetime.datetime.now()
+        self.report.start = datetime.datetime.now().replace(second=0, microsecond=0)
         self.report.stop = self.report.start
         
         self.timetracker.setStateActive(report=self.report)
