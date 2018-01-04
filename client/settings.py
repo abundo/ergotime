@@ -56,7 +56,6 @@ class MySettings(QtCore.QObject):
     main_win_pos           = AttrTypDefault(QtCore.QPoint, QtCore.QPoint(100,100))
     main_win_size          = AttrTypDefault(QtCore.QSize, QtCore.QSize(600,400))
     main_win_splitter_1    = AttrTypDefault(QByteArray, NO_DEFAULT)
-    main_win_splitter_2    = AttrTypDefault(QByteArray, NO_DEFAULT)
     
     fontName               = AttrTypDefault(str, "MS Shell Dlg 2")
     fontSize               = AttrTypDefault(str, "9")
@@ -129,4 +128,3 @@ class MySettings(QtCore.QObject):
 
 
 sett = MySettings()
-

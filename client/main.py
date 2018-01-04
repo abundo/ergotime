@@ -53,10 +53,8 @@ from common.report import Report
 
 import timetracker
 import main_win
+import report_main
 import systray
-
-
-StateRD = enum.Enum("StateRD", "none view edit new")
 
 
 class MyStatusBar:
@@ -116,7 +114,6 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         This is called from event loop, so GUI is fully initialized
         """
 
-        self.stateRD = StateRD.none
         self.localdb = util.openLocalDatabase2()
 
         self.activitymgr = ActivityMgr(localdb=self.localdb)
@@ -132,7 +129,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self._initActivity()
         self._initCurrentReport()
         self._initReports()
-        self._initReportDetails()
+        self.init_report_window()
 
         self.timetracker.init()
 
@@ -180,7 +177,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
                     self.reportmgr.sync()
                     # todo, wait for sync done
             
-        self._saveWindowPosition();
+        self._saveWindowPosition()
         self.activitymgr.stop()
         self.reportmgr.stop()
         
@@ -193,17 +190,13 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         sett.main_win_pos = self.pos()
         sett.main_win_size = self.size()
         sett.main_win_splitter_1 = self.splitter_1.saveState()
-        sett.main_win_splitter_2 = self.splitter_2.saveState()
 
     # restore the windows current position & size from settings
     def _restoreWindowPosition(self):
         log.debugf(DEBUG_MAINWIN, "Restore main window position and size")
         self.move(sett.main_win_pos)
         self.resize(sett.main_win_size)
-        if sett.contains("main_win_splitter_1"):
-            self.splitter_1.restoreState(sett.main_win_splitter_1)
-        if sett.contains("main_win_splitter_2"):
-            self.splitter_2.restoreState(sett.main_win_splitter_2)
+        self.splitter_1.restoreState(sett.main_win_splitter_1)
 
     def _setColor(self, widget, yellow):
         if yellow:
@@ -229,7 +222,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.actionExit.triggered.connect(self._closeHandler)
 
         # Edit, Settings
-        self.actionSettings.triggered.connect(self.settingsDialog)       
+        self.actionSettings.triggered.connect(self.settingsDialog)
                 
         # Activity, Sync
         self.actionActivitySync.triggered.connect(self.activitymgr.sync)
@@ -276,10 +269,8 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         """
         log.debugf(DEBUG_MAINWIN, "main/activityListUpdated()")
         alist = self.activitymgr.getList()
-        self.comboReportActivity.clear()
         self.comboCurrentActivity.clear()
         for a in alist:
-            self.comboReportActivity.addItem(a.name, a.server_id)
             self.comboCurrentActivity.addItem(a.name, a.server_id)
         self._reportsTableUpdated()
 
@@ -349,21 +340,6 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
 
         self.setWindowIcon(QtGui.QIcon("resource/%s" % icon))
 
-    def _currentReportReportChanged(self):
-        """Copy self.report -> GUI"""
-        if self.report:
-            self.comboCurrentActivity.setCurrentIndex(self.comboCurrentActivity.findData(self.report.activityid))
-            self.comboCurrentProject.setCurrentIndex(self.comboCurrentProject.findData(self.report.projectid))
-            self.dtCurrentStart.setDateTime(self.report.start)
-            self.timeCurrentLen.setTime(self.report.length)
-            self.txtCurrentComment.setText(self.report.comment)
-        else:
-            self.comboCurrentActivity.clearEditText()
-            self.comboCurrentProject.clearEditText()
-            self.dtCurrentStart.clear()
-            self.timeCurrentLen.clear()
-            self.txtCurrentComment.clear()
-    
     def _currentReportGuiChanged(self):
         """
         Copy GUI to self.report
@@ -396,9 +372,6 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
     # ########################################################################
 
     def _initReports(self):
-        # Reports
-        self._reportDetailsUpdate(None)
-        
         # Toolbar
         self.btnReportSync.clicked.connect(self.reportmgr.sync)
         self.chkReportSyncAuto.stateChanged.connect(self.reportmgr.setAutosync)
@@ -416,7 +389,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         t.setRowCount(1)
         t.setHorizontalHeaderLabels(("Activity", "Project", "Start", "Stop", "Len", "Flags", "Comment"))
         t.verticalHeader().setVisible(False)
-        t.clicked.connect(self._reportsTableRowClicked)
+        t.clicked.connect(self.report_edit)
         
         self.reportmgr.sig.connect(self._reportsTableUpdated)
 
@@ -427,8 +400,9 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         table.setItem(row, col, table_item)
 
     def _reportsTableUpdated(self):
-        """Load the reports into the list, for the selected date"""
-        self._reportDetailsUpdate(None)
+        """
+        Load the reports into the list, for the selected date
+        """
         if not self.reportmgr:
             return  # not initialized yet
         d = self.selectedDate.date().toPyDate()
@@ -536,29 +510,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.reportsWeekday.setText( dayname )
         self.tableReports.clearSelection()
         self._reportsTableUpdated()
-        self._reportDetailsUpdate(None)
 
-    def _reportsTableRowClicked(self, modelindex):
-        if self.stateRD == StateRD.edit or self.stateRD == StateRD.new:
-            self.tableReports.clearSelection()
-            log.info("Please save/cancel report before selecting a new one")
-            return
-        row = self.tableReports.currentRow()
-        row = self.tableReports.item(row, 0)
-        if row:
-            _id = row.data(QtCore.Qt.UserRole)
-            if _id != None and _id >= 0:
-                report = self.reportmgr.get(_id)
-                if report:
-                    self._reportDetail = report
-                    self.stateRD = StateRD.none
-                    self._reportDetailsUpdate(self._reportDetail)
-                    self.stateRD = StateRD.view
-                    return
-                log.error("Can't find report %s in local database" % _id)
-        
-        self._reportDetailsUpdate(None)
-        
     def _ReportsGetSelectedReportId(self):
         row = self.tableReports.currentRow()
         if row != None:
@@ -566,44 +518,6 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             return _id
         return None
         
-
-    # ########################################################################
-    #
-    #   Report details
-    #
-    # ########################################################################
-
-    def _initReportDetails(self):
-        
-        self._reportDetail = self._getNewReport()
-        
-        # toolbar
-        self.btnReportSave.clicked.connect(self._reportDetailsSave)
-        self.btnReportNew.clicked.connect(self._reportDetailsNew)
-        self.btnReportDelete.clicked.connect(self._reportDetailsRemove)
-        self.btnReportCancel.clicked.connect(self._reportDetailsCancelChange)
-        
-        # fields in grid
-        self.comboReportActivity.currentIndexChanged.connect(self._reportDetailsChangedEvent)
-        self.comboReportProject.currentIndexChanged.connect(self._reportDetailsChangedEvent)
-        self.dtReportStart.dateTimeChanged.connect(self._reportDetailsChangedEvent)
-        self.dtReportStop.dateTimeChanged.connect(self._reportDetailsChangedEvent)
-        self.timeReportLen.dateChanged.connect(self._reportDetailsChangedEvent)
-        self.txtReportComment.textChanged.connect(self._reportDetailsChangedEvent)
-
-        self.dtReportStart.dateTimeChanged.connect(self._reportDetailsUpdateLength)
-        self.dtReportStop.dateTimeChanged.connect(self._reportDetailsUpdateLength)
-
-        self.btnStartHourPlus.clicked.connect(self._reportDetailsModifyStart)
-        self.btnStartHourMinus.clicked.connect(self._reportDetailsModifyStart)
-        self.btnStartMinutePlus.clicked.connect(self._reportDetailsModifyStart)
-        self.btnStartMinuteMinus.clicked.connect(self._reportDetailsModifyStart)
-        
-        self.btnStopHourPlus.clicked.connect(self._reportDetailsModifyStop)
-        self.btnStopHourMinus.clicked.connect(self._reportDetailsModifyStop)
-        self.btnStopMinutePlus.clicked.connect(self._reportDetailsModifyStop)
-        self.btnStopMinuteMinus.clicked.connect(self._reportDetailsModifyStop)
-
     def _getNewReport(self):
         report = Report()
         report.server_id = -1
@@ -613,169 +527,49 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         report.updated = False
         report.modified = datetime.datetime(1990,1,1)
         return report
-    
-    @property
-    def stateRD(self):
-        return self._stateRD
 
-    @stateRD.setter
-    def stateRD(self, state):
-        s = state == StateRD.none or state == StateRD.view
-        
-        widgets1 = [self.btnReportSync, self.chkReportSyncAuto, self.btnSetSelectedDatePrev, 
-                    self.btnSetSelectedDateToday, self.btnSetSelectedDateNext, self.selectedDate,
-                    self.tableReports]
-        for widget in widgets1:
-            widget.setEnabled(s)
+    # ########################################################################
+    #
+    #   Report details
+    #
+    # ########################################################################
 
-        widgets2 = [self.lblReportSyncState, self.comboReportActivity, self.comboReportProject, 
-                    self.dtReportStart, self.dtReportStop, self.txtReportComment, 
-                    self.timeReportLen]
-        yellow = state == StateRD.edit or state == StateRD.new
-        for widget in widgets2:
-            widget.setDisabled(state == StateRD.none)
-            self._setColor(widget, yellow)
+    def init_report_window(self):
+        self.btn_report_create.clicked.connect(self.report_create)
+        self.btn_report_edit.clicked.connect(self.report_edit)
 
-        self._stateRD = state
-
-    def _reportDetailsUpdateLength(self):
-        """Called when start or stop datetime changed"""
-        start = self.dtReportStart.dateTime().toPyDateTime()
-        stop = self.dtReportStop.dateTime().toPyDateTime()
-        if stop < start:
-            # stop can't be before start
-            self.dtReportStop.setDateTime(self.dtReportStart.dateTime())
-        l = (stop - start).total_seconds() / 60
-        self.timeReportLen.setTime(QtCore.QTime(l // 60, l % 60))
-
-    def _reportDetailsUpdate(self, report):
-        """Called when a report is selected/not selected"""
-        if report:
-            s = ""
-            if report.server_id != None and report.server_id >= 0:
-                s +="on server(%s) " % report.server_id
-            if report.updated:
-                s +="locally updated "
-            if report.deleted:
-                s +="to be removed "
-            self.lblReportSyncState.setText(s)
-            if report.activityid >= 0:
-                self.comboReportActivity.setCurrentIndex(self.comboReportActivity.findData(report.activityid))
-                # self.comboReportProject.setCurrentIndex()
-            if report.start != None:
-                self.dtReportStart.setDateTime(report.start)
-            else:
-                self.dtReportStart.clear()
-            if report.stop != None:
-                self.dtReportStop.setDateTime(report.stop)
-            else:
-                self.dtReportStop.clear()
-            
-            self.txtReportComment.setText(report.comment)
-        else:
-            self._reportDetail = self._getNewReport()
-            self.stateRD = StateRD.none
-            self.lblReportSyncState.clear()
-            # db = QtCore.QDateTime.fromMSecsSinceEpoch(0)
-            d = datetime.datetime.now()
-            self.dtReportStart.setDateTime(d)
-            self.dtReportStop.setDateTime(d)
-            self.timeReportLen.clear()
-            self.txtReportComment.clear()
-            
-    def _reportDetailsSave(self):
-        """User clicked Save, save new or existing report"""
-        if self.stateRD == StateRD.edit:
-            self._reportDetail.updated = True
-        elif self.stateRD == StateRD.new:
-            pass
-        else:
-            log.info("Save aborted, no change or not editing a new report")
-            return
-
-        # update report object from GUI
-        activityid = self.comboReportActivity.itemData(self.comboReportActivity.currentIndex())
-        if not activityid or activityid < 1:
-            log.warning("Save failed, no activity selected")
-            return
-        self._reportDetail.activityid = activityid
-        # todo project
-        self._reportDetail.start = self.dtReportStart.dateTime().toPyDateTime().replace(microsecond=0)
-        self._reportDetail.stop = self.dtReportStop.dateTime().toPyDateTime().replace(microsecond=0)
-        self._reportDetail.comment = self.txtReportComment.toPlainText()
-        if self._reportDetail.comment == None:
-            self._reportDetail.comment = ""
-        if self.reportmgr.store(self._reportDetail):
-            self._reportDetailsUpdate(self._reportDetail)
-    
-    def _reportDetailsNew(self):
-        """User clicked New"""
-        if self.stateRD in [StateRD.edit, StateRD.new]:
-            log.warning("Please save/cancel changes before creating new report")
-            return
-        self.tableReports.clearSelection()
+    def report_create(self):
+        """
+        Open the report detail window, with default values for creating a new report
+        """
         d = self.selectedDate.date().toPyDate()
-        self._reportDetail = self._getNewReport()
-        self._reportDetail.start = datetime.datetime.combine(d, datetime.datetime.now().time())
-        self._reportDetail.stop = self._reportDetail.start + datetime.timedelta(seconds=30*60)
-        self._reportDetailsUpdate(self._reportDetail)
-        self.stateRD = StateRD.new
+        a = report_main.Report_Win(self, 
+                                   activityMgr = self.activitymgr,
+                                   reportMgr = self.reportmgr,
+                                   default_date=d)
+        a.exec_()
 
-    def _reportDetailsRemove(self):
-        """User clicked Remove"""
-        if self.stateRD == StateRD.edit:
-            log.warning("Please Save/Cancel changes to selected report before removing it")
-            return
-        if self.stateRD != StateRD.view:
-            log.warning("Please select a report to remove")
-            return
-        msgBox = QtWidgets.QMessageBox(parent=self)
-        msgBox.setText("Do you want to remove the report?")
-        msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
-        response = msgBox.exec_()
-        if response == QtWidgets.QMessageBox.Yes:
-            self.reportmgr.remove(self._reportDetail)   # will trigger update of Reports Table
-    
-    def _reportDetailsCancelChange(self):
-        self.tableReports.clearSelection()
-        self._reportDetailsUpdate(None)
-    
-    def _reportDetailsChangedEvent(self):
-        """Called when user edits any details of a report"""
-        if self.stateRD == StateRD.view:
-            self.stateRD = StateRD.edit
+    def report_edit(self):
+        """
+        Open the report detail window, for editing an existing report
+        Called from double-click in table, or edit button
+        """
+        row = self.tableReports.currentRow()
+        row = self.tableReports.item(row, 0)
+        if row:
+            _id = row.data(QtCore.Qt.UserRole)
+            if _id != None and _id >= 0:
+                report = self.reportmgr.get(_id)
+                if report:
+                    a = report_main.Report_Win(self, 
+                                            activityMgr = self.activitymgr,
+                                            reportMgr = self.reportmgr,
+                                            report=report)
+                    a.exec_()
+                    return
+                log.error("Can't find report %s in local database" % _id)
 
-    def _reportDetailsModifyStart(self):
-        """Handle the start +H -H +S -S buttons"""
-        sender=self.sender()
-        if isinstance(sender, QtWidgets.QToolButton):
-            action = sender.text()
-            dtstart = self.dtReportStart.dateTime()
-            dtstop = self.dtReportStop.dateTime()
-            if action == "+H":
-                sec = 3600
-            elif action == "-H":
-                sec = -3600
-            elif action == "+M":
-                sec = 60
-            elif action == "-M":
-                sec = -60
-            self.dtReportStart.setDateTime(dtstart.addSecs(sec))
-            self.dtReportStop.setDateTime(dtstop.addSecs(sec))
-
-    def _reportDetailsModifyStop(self):
-        """Handle the stop +H -H +S -S buttons"""
-        sender=self.sender()
-        if isinstance(sender, QtWidgets.QToolButton):
-            action = sender.text()
-            dtstop = self.dtReportStop.dateTime()
-            if action == "+H":
-                sec = 3600
-            elif action == "-H":
-                sec = -3600
-            elif action == "+M":
-                sec = 60
-            elif action == "-M":
-                sec = -60
-            self.dtReportStop.setDateTime(dtstop.addSecs(sec))
+    def report_delete(self):
+        """
+        Open the report detail window, for deleting an existing report
+        """
