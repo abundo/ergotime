@@ -76,8 +76,9 @@ class MySettings(QtCore.QObject):
     localDatabaseName      = localDatabaseName
 
     def _attriter(self):
-        """Iterate through all settings"""
-        
+        """
+        Iterate through all settings
+        """
         for var in vars(self):
             tmp = getattr(self, var)
             print(var, type(tmp))

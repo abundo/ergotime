@@ -52,7 +52,9 @@ old_stderr = sys.stderr
 
 
 def handle_exception(exc_type, exc_value, exc_traceback):
-    """ handle all exceptions """
+    """
+    handle all python exceptions, show a dialog box with the error
+    """
 
     # KeyboardInterrupt is a special case.
     # We don't raise the error dialog when it occurs.
@@ -60,9 +62,9 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         if app:
             app.quit()
 
-    filename, line, dummy, dummy = traceback.extract_tb( exc_traceback ).pop()
-    filename = os.path.basename( filename )
-    error    = "%s: %s" % ( exc_type.__name__, exc_value )
+    filename, line, dummy, dummy = traceback.extract_tb(exc_traceback).pop()
+    filename = os.path.basename(filename)
+    error    = "%s: %s" % (exc_type.__name__, exc_value)
 
     QtWidgets.QMessageBox.critical(None,"Error",
         "<html>A critical error has occured.<br/> "

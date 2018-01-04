@@ -112,7 +112,9 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
     # ########################################################################
 
     def delayInit(self):
-        """This is called from event loop, so GUI is fully initialized"""
+        """
+        This is called from event loop, so GUI is fully initialized
+        """
 
         self.stateRD = StateRD.none
         self.localdb = util.openLocalDatabase2()
@@ -269,7 +271,9 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.activityListUpdated()
 
     def activityListUpdated(self):
-        """Called when the list of activities has changed during sync with the server"""
+        """
+        Called when the list of activities has changed during sync with the server
+        """
         log.debugf(DEBUG_MAINWIN, "main/activityListUpdated()")
         alist = self.activitymgr.getList()
         self.comboReportActivity.clear()
@@ -314,13 +318,16 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.timetracker.setStateInactive()
 
     def _currentReportUpdated(self, status):
-        """Called periodically by timetracker so GUI can be updated"""
+        """
+        Called periodically by timetracker so GUI can be updated
+        """
         self.timeCurrentLen.setTime(status.length)
         self._myStatusBar.idle = "Idle %s" % status.idle
         
     def _currentReportStateChanged(self, state):
-        """Called when timetracker state changes"""
-        
+        """
+        Called when timetracker state changes
+        """
         icon = "tray-inactive.png"
         widgets = [self.dtCurrentStart, self.timeCurrentLen, self.txtCurrentComment]
         if state == self.timetracker.stateActive:
@@ -358,7 +365,9 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             self.txtCurrentComment.clear()
     
     def _currentReportGuiChanged(self):
-        """Copy GUI to self.report"""
+        """
+        Copy GUI to self.report
+        """
         
         if self.report:
             tmpid = self.comboCurrentActivity.itemData(self.comboCurrentActivity.currentIndex())

@@ -154,6 +154,9 @@ class ReportMgr(QtCore.QObject):
         return True
 
     def remove(self, report):
+        """
+        Returns True if report deleted successfully
+        """
         ret = False
         try:
             if report.server_id != None and report.server_id >= 0:
