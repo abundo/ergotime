@@ -167,7 +167,8 @@ class ReportMgr(QtCore.QObject):
             else:
                 # Report does not exist on server, can be removed directly
                 sql = "DELETE FROM report WHERE _id=?"
-                self.localdb.delete(sql, (report._id))
+                self.localdb.delete(sql, (report._id,))
+            ret = True
             self.sig.emit()
             if self._autosync:
                 self.sync()
