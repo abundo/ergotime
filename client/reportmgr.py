@@ -163,7 +163,6 @@ class ReportMgr(QtCore.QObject):
                 # Report exist on server, mark for removal - next sync will remove the row
                 report.deleted = 1
                 self.localdb.update("report", d=report, primary_key="_id")
-                ret = True
             else:
                 # Report does not exist on server, can be removed directly
                 sql = "DELETE FROM report WHERE _id=?"
