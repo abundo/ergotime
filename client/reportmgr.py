@@ -137,7 +137,7 @@ class ReportMgr(QtCore.QObject):
         # todo, use count(*)
         sql = "SELECT count(*) FROM report WHERE server_id < 0"
         unsync_reports_count = self.localdb.count(sql) 
-        return len(unsync_reports_count)
+        return unsync_reports_count
     
     def store(self, report):
         try:
