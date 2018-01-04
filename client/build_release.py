@@ -41,7 +41,7 @@ shutil.rmtree("build", ignore_errors=True)
 
 sys.path.append("d:/hack/eclipse/ergotime")
 
-includes = ["logging.handlers","sqlite3"]
+includes = ["logging.handlers", "sqlite3", "codecs"]
 includefiles = []
 excludes = []
 packages = ["atexit"]
@@ -62,10 +62,12 @@ GUI2Exe_Target_1 = Executable(
     base = base,
     
     targetName = "ergotime.exe",
-    compress = False,
-    copyDependentFiles = True,
-    appendScriptToExe = False,
-    appendScriptToLibrary = False,
+#    compress = False,
+#    copyDependentFiles = True,
+#    copy_dependent_files = True,
+#    appendScriptToExe = False,
+#    append_script_to_exe = False,
+#    appendScriptToLibrary = False,
     icon = "resource/ergotime.ico"
 )
 
@@ -81,14 +83,10 @@ setup(
                              "include_files": includefiles,
                              "excludes": excludes,
                              "packages": packages,
-                             "path": sys.path
+                             "path": sys.path,
                              }
                },
 
     executables = [GUI2Exe_Target_1]
 )
 
-# This is a place where any post-compile code may go.
-# You can add as much code as you want, which can be used, for example,
-# to clean up your folders or to do some particular post-compilation
-# actions.

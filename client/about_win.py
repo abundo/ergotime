@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:\hack\eclipse\ergotime\client\about_win.ui'
 #
-# Created by: PyQt5 UI code generator 5.5
+# Created by: PyQt5 UI code generator 5.9.1
 #
 # WARNING! All changes made in this file will be lost!
 
