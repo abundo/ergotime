@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -36,60 +36,90 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
+import os
 import platform
 
-if platform.system() == "Windows":
+import ctypes
+import struct
 
-    from ctypes import Structure, windll, c_uint, sizeof, byref
 
-    class LASTINPUTINFO(Structure):
+class WindowsIdleDetect:
+    
+    class LASTINPUTINFO(ctypes.Structure):
         _fields_ = [
-            ('cbSize', c_uint),
-            ('dwTime', c_uint),
+            ('cbSize', ctypes.c_uint),
+            ('dwTime', ctypes.c_uint),
         ]
 
-    def getIdle():
-        """Returns idle time in seconds"""
-        windll.user32.GetLastInputInfo(byref(lastInputInfo))
-        millis = windll.kernel32.GetTickCount() - lastInputInfo.dwTime
-        return millis // 1000
+    def __init_(self):
+        self.lastInputInfo = self.LASTINPUTINFO()
+        self.lastInputInfo.cbSize = ctypes.sizeof(self.lastInputInfo)
+    
+    def getIdle(self):
+        """
+        Returns idle time in seconds
+        """
+        ctypes.windll.user32.GetLastInputInfo(ctypes.byref(self.lastInputInfo))
+        idle_ms = ctypes.windll.kernel32.GetTickCount() - self.lastInputInfo.dwTime
+        return idle_ms // 1000
 
 
-    lastInputInfo = LASTINPUTINFO()
-    lastInputInfo.cbSize = sizeof(lastInputInfo)
+class LinuxIdleDetect:
+
+    class XScreenSaverInfo( ctypes.Structure):
+      """
+      typedef struct { ... } XScreenSaverInfo;
+      """
+      _fields_ = [('window',      ctypes.c_ulong), # screen saver window
+                  ('state',       ctypes.c_int),   # off,on,disabled
+                  ('kind',        ctypes.c_int),   # blanked,internal,external
+                  ('since',       ctypes.c_ulong), # milliseconds
+                  ('idle',        ctypes.c_ulong), # milliseconds
+                  ('event_mask',  ctypes.c_ulong)] # events
+    
+    def __init__(self):
+        # libraries
+        self.xlib = ctypes.cdll.LoadLibrary("libX11.so.6")
+        self.xss  = ctypes.cdll.LoadLibrary("libXss.so.1")
+        
+        self.display = self.xlib.XOpenDisplay(bytes(os.environ["DISPLAY"], 'ascii'))
+        self.root = self.xlib.XDefaultRootWindow(self.display)
+        self.xss.XScreenSaverAllocInfo.restype = ctypes.POINTER(self.XScreenSaverInfo)
+        self.xss_info = self.xss.XScreenSaverAllocInfo()
+        
+    def get_idle(self):
+        """
+        Returns idle time in seconds
+        """
+        self.xss.XScreenSaverQueryInfo( self.display, self.root, self.xss_info)
+        idle_ms = self.xss_info.contents.idle 
+        return idle_ms // 1000
+        
+
+class DummyIdleDetect:
+
+    def get_idle(self):
+        return 0
+
+
+if platform.system() == "Windows":
+    idle_detector = WindowsIdleDetect()
 
 elif platform.system() == "Linux":
-    
-    def getIdle():
-        return 0
+    idle_detector = LinuxIdleDetect()
 
 else:
+    idle_detector = DummyIdleDetect()
 
-    def getIdle():
-        return 0
+
+def getIdle():
+    return idle_detector.get_idle()
 
 
 if __name__ == '__main__':
-    print("Some test code for Linux idle detect")
-    import ctypes
-    import struct
-    
-    # libraries
-    xlib = ctypes.cdll.LoadLibrary("libX11.so")
-    xss  = ctypes.cdll.LoadLibrary("libXss.so")
-    
-    # functions
-    XScreenSaverAllocInfo = xss.XScreenSaverAllocInfo
-    XOpenDisplay          = xlib.XOpenDisplay
-    XScreenSaverQueryInfo = xss.XScreenSaverQueryInfo
-    XDefaultRootWindow    = xlib.XDefaultRootWindow
-    
-    # let ctypes assume defaults for all these return values, as it doesn't matter really...
-    # production code might want to not hardcode the offset 16...
-    display = XOpenDisplay( ctypes.c_int(0) )
-    info    = XScreenSaverAllocInfo()
-    XScreenSaverQueryInfo( display, XDefaultRootWindow( display ), info )
-    time    = bytes( ctypes.cast( info, ctypes.POINTER( ctypes.c_ubyte ) )[16:20] )
-    time    = struct.unpack("@L", time)[0]
-    print( "%.03f sec" % ( time / 1000.0 ) )
-    
+    """Test code for idle detect"""
+    import time
+    while True:
+        idle = getIdle()
+        print("Idle:", idle)
+        time.sleep(1)
