@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>822</width>
-    <height>677</height>
+    <width>940</width>
+    <height>623</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -74,7 +74,14 @@
                </widget>
               </item>
               <item row="1" column="1">
-               <widget class="QComboBox" name="comboCurrentProject"/>
+               <widget class="QComboBox" name="comboCurrentProject">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
               </item>
               <item row="2" column="0">
                <widget class="QLabel" name="label_4">
@@ -143,23 +150,6 @@
                   </property>
                  </spacer>
                 </item>
-               </layout>
-              </item>
-              <item row="3" column="1">
-               <layout class="QHBoxLayout" name="horizontalLayout_2">
-                <item>
-                 <spacer name="horizontalSpacer_2">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
                 <item>
                  <widget class="QToolButton" name="btnCurrentStart">
                   <property name="text">
@@ -175,6 +165,9 @@
                  </widget>
                 </item>
                </layout>
+              </item>
+              <item row="3" column="1">
+               <layout class="QHBoxLayout" name="horizontalLayout_2"/>
               </item>
              </layout>
             </item>
@@ -404,19 +397,19 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>822</width>
-     <height>21</height>
+     <width>940</width>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>Fi&amp;le</string>
     </property>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
-     <string>Edit</string>
+     <string>E&amp;dit</string>
     </property>
     <addaction name="actionSettings"/>
     <addaction name="actionShortlist"/>
@@ -424,7 +417,7 @@
    </widget>
    <widget class="QMenu" name="menuActivity">
     <property name="title">
-     <string>Activity</string>
+     <string>A&amp;ctivity</string>
     </property>
     <addaction name="actionActivitySync"/>
    </widget>
@@ -449,27 +442,27 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAbout">
    <property name="text">
-    <string>About</string>
+    <string>&amp;About</string>
    </property>
   </action>
   <action name="actionSettings">
    <property name="text">
-    <string>Settings</string>
+    <string>&amp;Settings</string>
    </property>
   </action>
   <action name="actionShortlist">
    <property name="text">
-    <string>Shortlist</string>
+    <string>S&amp;hortlist</string>
    </property>
   </action>
   <action name="actionActivitySync">
    <property name="text">
-    <string>Sync</string>
+    <string>&amp;Sync</string>
    </property>
   </action>
   <action name="actionReportSync">
    <property name="text">
-    <string>Sync</string>
+    <string>&amp;Sync</string>
    </property>
   </action>
   <action name="actionNew">
@@ -489,12 +482,12 @@
   </action>
   <action name="actionExit">
    <property name="text">
-    <string>Exit</string>
+    <string>&amp;Exit</string>
    </property>
   </action>
   <action name="actionSave_windows_position">
    <property name="text">
-    <string>Save windows position</string>
+    <string>Save &amp;windows position</string>
    </property>
   </action>
   <action name="actionLoad_windows_position">
