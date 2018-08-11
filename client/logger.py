@@ -115,7 +115,7 @@ class Log(QtCore.QObject):
 
     def log(self, level, threadname, msg):
         if level <= self.level:
-            now = datetime.datetime.now().strftime("%Y-%m-%db %H:%M:%S")
+            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             line = "%s %s %s %s" % (now, threadname, self.levels[level], msg)
             if self.out != None:
                 self.out.appendPlainText(line)
