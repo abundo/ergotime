@@ -119,6 +119,8 @@ class Log(QtCore.QObject):
             line = "%s %s %s %s" % (now, threadname, self.levels[level], msg)
             if self.out != None:
                 self.out.appendPlainText(line)
+                sb = self.out.verticalScrollBar()
+                sb.setValue(sb.maximum())
             else:
                 self._lines.append(line)
                 print(line)
