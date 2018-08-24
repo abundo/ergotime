@@ -51,11 +51,11 @@ class WindowsIdleDetect:
             ('dwTime', ctypes.c_uint),
         ]
 
-    def __init_(self):
+    def __init__(self):
         self.lastInputInfo = self.LASTINPUTINFO()
         self.lastInputInfo.cbSize = ctypes.sizeof(self.lastInputInfo)
     
-    def getIdle(self):
+    def get_idle(self):
         """
         Returns idle time in seconds
         """
