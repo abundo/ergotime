@@ -55,7 +55,7 @@ def strTimedeltaHM(td, includeDecimal=False):
     minutes = (seconds / 60) % 60
     res = "%02i:%02i" % (hours, minutes)
     if includeDecimal:
-        res += "     (%i.%02i hours)" % (hours, minutes * 100/60)
+        res += "\n(%i.%02i)" % (hours, minutes * 100/60)
     return res
 
 
@@ -193,8 +193,8 @@ class ActivityDay:
         self.reports.append(report)
         self.total += report.length
 
-    def strTotal(self):
-        return strTimedeltaHM(self.total)
+    def strTotal(self, includeDecimal=False):
+        return strTimedeltaHM(self.total, includeDecimal=includeDecimal)
 
     # go through all reports, return dict with values
     # If non-first entry, return empty date
