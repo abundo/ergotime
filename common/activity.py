@@ -45,4 +45,4 @@ class Activity(AttrDict):
         self.name = ""
         self.description = ""
         self.active = 0
-        self.project_id = 0
+
