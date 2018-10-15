@@ -42,48 +42,49 @@ import lib.db as db
 
 def openLocalDatabase2(dbname=None):
     dbconf = { 'name': sett.localDatabaseName }
-    conn = db.Database(dbconf, driver="sqlite")
+    conn = db.Database(dbconf, driver='sqlite')
     conn.connect()
-    log.info("Open local database %s" % dbconf)
+    log.info('Open local database %s' % dbconf)
 
-    sql  = "CREATE TABLE IF NOT EXISTS report ("
-    sql += "  _id         INTEGER PRIMARY KEY, "
-    sql += "  user_id     INT  NOT NULL default -1, "
-    sql += "  activityid  INT  NOT NULL default -1, "
-    sql += "  start       TIMESTAMP NOT NULL, "
-    sql += "  stop        TIMESTAMP NOT NULL, "
-    sql += "  comment     TEXT NOT NULL default '', "
+    sql  = 'CREATE TABLE IF NOT EXISTS report ('
+    sql += '  _id         INTEGER PRIMARY KEY, '
+    sql += '  user_id     INT  NOT NULL default -1, '
+    sql += '  activityid  INT  NOT NULL default -1, '
+    sql += '  start       TIMESTAMP NOT NULL, '
+    sql += '  stop        TIMESTAMP NOT NULL, '
+    sql += '  comment     TEXT NOT NULL default "", '
 
-    sql += "  modified    TIMESTAMP NOT NULL, "
-    sql += "  seq         INT  NOT NULL default -1, "
-    sql += "  deleted     INT  NOT NULL default  0, "
+    sql += '  modified    TIMESTAMP NOT NULL, '
+    sql += '  seq         INT  NOT NULL default -1, '
+    sql += '  deleted     INT  NOT NULL default  0, '
 
-    sql += "  server_id   INT  NOT NULL default -1, "
-    sql += "  updated     INT  NOT NULL default -1 "
-    sql += ");"
+    sql += '  server_id   INT  NOT NULL default -1, '
+    sql += '  updated     INT  NOT NULL default -1 '
+    sql += ');'
     conn.execute(sql)
     
-    sql  = "CREATE TABLE IF NOT EXISTS activity ("
-    sql += "  _id         INTEGER PRIMARY KEY, "
-    sql += "  name        TEXT NOT NULL default '', "
-    sql += "  description TEXT NOT NULL default '', "
-    sql += "  project_id  INT  NOT NULL default -1, "
-    sql += "  active      INT  NOT NULL default  0, "
-    sql += "  server_id   INT  NOT NULL default -1 "
-    sql += ");"
+    sql  = 'CREATE TABLE IF NOT EXISTS activity ('
+    sql += '  _id         INTEGER PRIMARY KEY, '
+    sql += '  name        TEXT NOT NULL default "", '
+    sql += '  description TEXT NOT NULL default "", '
+    sql += '  project_id  INT  NOT NULL default -1, '
+    sql += '  active      INT  NOT NULL default  0, '
+    sql += '  server_id   INT  NOT NULL default -1 '
+    sql += ');'
     conn.execute(sql)
     
-    sql  = "CREATE TABLE IF NOT EXISTS project ("
-    sql += "  _id         INTEGER PRIMARY KEY, "
-    sql += "  activity_id INT  NOT NULL default -1, "
-    sql += "  name        TEXT NOT NULL default '', "
-    sql += "  costcenter  TEXT NOT NULL default '', "
-    sql += "  active      INT  NOT NULL default  0 "
-    sql += ");"
+    sql  = 'CREATE TABLE IF NOT EXISTS project ('
+    sql += '  _id         INTEGER PRIMARY KEY, '
+    sql += '  activity_id INT  NOT NULL default -1, '
+    sql += '  name        TEXT NOT NULL default "", '
+    sql += '  costcenter  TEXT NOT NULL default "", '
+    sql += '  active      INT  NOT NULL default  0 '
+    sql += ');'
     conn.execute(sql)
 
     return conn
     
 
 if __name__ == '__main__':
-    openLocalDatabase2("c:/temp/ergotime.db")
+    '''Module test'''
+    openLocalDatabase2('c:/temp/ergotime.db')

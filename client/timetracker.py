@@ -44,14 +44,14 @@ import idle_dectect
 
 
 class Status:
-    """Send status info when state=stateActive"""
+    '''Send status info when state=stateActive'''
     def __init__(self):
         self.idle = 0
         self.length = None
 
 
 class Timetracker(QtCore.QObject):
-    """
+    '''
     Handle everything related to time tracking
     
     current state
@@ -59,7 +59,7 @@ class Timetracker(QtCore.QObject):
     sends signals when things change, so GUI can update
     
     when state is active, a _timer periodically checks if user has been idle
-    """
+    '''
     
     stateStartup  = 1   # Only used during program startup
     stateInactive = 2
@@ -88,14 +88,14 @@ class Timetracker(QtCore.QObject):
         self.setStateInactive()
     
     def setStateInactive(self):
-        """User clicked Stop"""
+        '''User clicked Stop'''
         
         if self.state == self.stateStartup:
             self.state = self.stateInactive
             self.stateSignal.emit(self.stateInactive)
 
         elif self.state == self.stateInactive:
-            log.error("Incorrect state change, inactive->inactive")
+            log.error('Incorrect state change, inactive->inactive')
 
         elif self.state == self.stateActive:
             self._timer.stop()
@@ -106,12 +106,12 @@ class Timetracker(QtCore.QObject):
             self.stateSignal.emit(self.stateInactive)
 
         elif self.state == self.stateIdle:
-            log.error("Incorrect state change, inactive->idle")
+            log.error('Incorrect state change, inactive->idle')
         else:
-            log.error("Incorrect state %s" % self.state)
+            log.error('Incorrect state %s' % self.state)
     
     def setStateActive(self, report=None):
-        """User clicked Start"""
+        '''User clicked Start'''
         if self.state == self.stateInactive:
             self.report = report
             self._timer = QtCore.QTimer()
@@ -123,21 +123,21 @@ class Timetracker(QtCore.QObject):
             self.stateSignal.emit(self.stateActive)
 
         elif self.state == self.stateActive:
-            log.error("Incorrect state change, active->active")
+            log.error('Incorrect state change, active->active')
         
         elif self.state == self.stateIdle:
-            log.error("Incorrect state change, active->idle")
+            log.error('Incorrect state change, active->idle')
         else:
-            log.error("Incorrect state %s" % self.state)
+            log.error('Incorrect state %s' % self.state)
 
     def setStateIdle(self):
-        """
+        '''
         Idle detected, save current report and go to Inactive
         This is an internal state, external GUI only knows about Inactive/Active
         Subtract the idle period before going to inactive
-        """
+        '''
         if self.state == self.stateInactive:
-            log.error("Incorrect state change, inactive->idle")
+            log.error('Incorrect state change, inactive->idle')
             
         elif self.state == self.stateActive:
             self._timer.stop()
@@ -147,13 +147,13 @@ class Timetracker(QtCore.QObject):
             self.stateSignal.emit(self.stateInactive)
 
         elif self.state == self.stateIdle:
-            log.error("Incorrect state change, idle->idle")
+            log.error('Incorrect state change, idle->idle')
             return
         else:
-            log.error("Incorrect state %s" % self.state)
+            log.error('Incorrect state %s' % self.state)
 
     def _saveReport(self, subtract_seconds=0):
-        log.debug("Saving report %s" % self.report)
+        log.debug('Saving report %s' % self.report)
         self.report.stop = datetime.datetime.now().replace(microsecond=0) - datetime.timedelta(seconds=subtract_seconds)
         self.reportmgr.store(self.report)
 
@@ -163,10 +163,10 @@ class Timetracker(QtCore.QObject):
         return datetime.time(hour, minute, second)
                     
     def _update(self):
-        """
+        '''
         Called every second when state == stateActive
         Check if idle
-        """
+        '''
         self.report.stop = datetime.datetime.now().replace(microsecond=0)
         td = self.report.stop - self.report.start
         self._status.length = self._seconds_to_time(td.seconds)
@@ -174,12 +174,12 @@ class Timetracker(QtCore.QObject):
         idle_seconds = idle_dectect.getIdle()
         self._status.idle = self._seconds_to_time(idle_seconds)      
         if idle_seconds > sett.idle_timeout:
-            log.info("Idle timeout detected")
+            log.info('Idle timeout detected')
             self.setStateIdle()
             return
 
         self.activeUpdated.emit(self._status)
         
     def options_changed(self):
-        """Called when user changes options"""
+        '''Called when user changes options'''
         pass

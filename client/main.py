@@ -88,10 +88,10 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self._myStatusBar = MyStatusBar(self)
 
         log.setOut(self.txtLog)
-        log.info("Log started")
+        log.info('Log started')
         sys.stdout = log
         sys.stderr = log
-        print("STDOUT/STDERR Redirected to log")
+        print('STDOUT/STDERR Redirected to log')
         
         self.color_white = self.dtCurrentStart.palette()
         self.color_white.setColor(QtGui.QPalette.All, QtGui.QPalette.Base, QtGui.QColor(QtCore.Qt.white))
@@ -110,9 +110,9 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
     # ########################################################################
 
     def delayInit(self):
-        """
-        This is called from event loop, so GUI is fully initialized
-        """
+        '''
+        This is called from event loop, when GUI is fully initialized
+        '''
 
         self.localdb = util.openLocalDatabase2()
 
@@ -158,7 +158,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
 
         # is there an current activity? it needs to be stopped and saved
         if self.timetracker.state == self.timetracker.stateActive:
-            msgBox.setText("There is an activity running, do you want to save this as a report?")
+            msgBox.setText('There is an activity running, do you want to save this as a report?')
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
             response = msgBox.exec_()
@@ -169,7 +169,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             # do we have unsyncronised local changes?
             count = self.reportmgr.getUnsyncronisedCount()
             if count > 0:
-                msgBox.setText("There are %s reports in local database that needs to be syncronized with the server. Do you want to do this now?" % count)
+                msgBox.setText('There are %s reports in local database that needs to be syncronized with the server. Do you want to do this now?' % count)
                 msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                 msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
                 response = msgBox.exec_()
@@ -186,14 +186,14 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
     
     # save the current windows position & size in settings
     def _saveWindowPosition(self):
-        log.debugf(DEBUG_MAINWIN, "Save main window position and size")
+        log.debugf(DEBUG_MAINWIN, 'Save main window position and size')
         sett.main_win_pos = self.pos()
         sett.main_win_size = self.size()
         sett.main_win_splitter_1 = self.splitter_1.saveState()
 
     # restore the windows current position & size from settings
     def _restoreWindowPosition(self):
-        log.debugf(DEBUG_MAINWIN, "Restore main window position and size")
+        log.debugf(DEBUG_MAINWIN, 'Restore main window position and size')
         self.move(sett.main_win_pos)
         self.resize(sett.main_win_size)
         self.splitter_1.restoreState(sett.main_win_splitter_1)
@@ -205,7 +205,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             widget.setPalette(self.color_white)
         
     def settingsUpdated(self):
-        log.debugf(DEBUG_MAINWIN, "settingsUpdated")
+        log.debugf(DEBUG_MAINWIN, 'settingsUpdated')
         font = QFont(sett.fontName, int(sett.fontSize))
         self.setFont(font)
         QGuiApplication.setFont(font)
@@ -246,11 +246,11 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         
     def handleLogMenu(self, pos):
         menu = QtWidgets.QMenu(self)
-        clearAction = menu.addAction("Clear")
+        clearAction = menu.addAction('Clear')
         action = menu.exec_(QtGui.QCursor.pos())
         if action == clearAction:
             self.txtLog.clear()
-            log.debugf(DEBUG_MAINWIN, "Log cleared()")
+            log.debugf(DEBUG_MAINWIN, 'Log cleared()')
 
 
     # ########################################################################
@@ -264,10 +264,10 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.activityListUpdated()
 
     def activityListUpdated(self):
-        """
+        '''
         Called when the list of activities has changed during sync with the server
-        """
-        log.debugf(DEBUG_MAINWIN, "main/activityListUpdated()")
+        '''
+        log.debugf(DEBUG_MAINWIN, 'main/activityListUpdated()')
         alist = self.activitymgr.getList()
         self.comboCurrentActivity.clear()
         for a in alist:
@@ -309,27 +309,27 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.timetracker.setStateInactive()
 
     def _currentReportUpdated(self, status):
-        """
+        '''
         Called periodically by timetracker so GUI can be updated
-        """
+        '''
         self.timeCurrentLen.setTime(status.length)
-        self._myStatusBar.idle = "Idle %s" % status.idle
+        self._myStatusBar.idle = 'Idle %s' % status.idle
         
     def _currentReportStateChanged(self, state):
-        """
+        '''
         Called when timetracker state changes
-        """
-        icon = "tray-inactive.png"
+        '''
+        icon = 'tray-inactive.png'
         widgets = [self.dtCurrentStart, self.timeCurrentLen, self.txtCurrentComment]
         if state == self.timetracker.stateActive:
             self.dtCurrentStart.setDateTime( QtCore.QDateTime.currentDateTime() )
-            icon = "tray-active.png"
+            icon = 'tray-active.png'
             for widget in widgets:
                 widget.setEnabled(True)
                 self._setColor(widget, True)
         else:
-            self.dtCurrentStart.findChild(QtWidgets.QLineEdit).setText("")
-            self.timeCurrentLen.findChild(QtWidgets.QLineEdit).setText("")
+            self.dtCurrentStart.findChild(QtWidgets.QLineEdit).setText('')
+            self.timeCurrentLen.findChild(QtWidgets.QLineEdit).setText('')
             self.txtCurrentComment.clear()
             for widget in widgets:
                 self._setColor(widget, False)
@@ -338,12 +338,12 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.btnCurrentStart.setEnabled(state == self.timetracker.stateInactive)
         self.btnCurrentStop.setEnabled(state != self.timetracker.stateInactive)
 
-        self.setWindowIcon(QtGui.QIcon("resource/%s" % icon))
+        self.setWindowIcon(QtGui.QIcon('resource/%s' % icon))
 
     def _currentReportGuiChanged(self):
-        """
+        '''
         Copy GUI to self.report
-        """
+        '''
         
         if self.report:
             tmpid = self.comboCurrentActivity.itemData(self.comboCurrentActivity.currentIndex())
@@ -387,7 +387,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         t.clearSelection()
         t.setColumnCount(7)
         t.setRowCount(1)
-        t.setHorizontalHeaderLabels(("Activity", "Project", "Start", "Stop", "Len", "Flags", "Comment"))
+        t.setHorizontalHeaderLabels(('Activity', 'Project', 'Start', 'Stop', 'Len', 'Flags', 'Comment'))
         t.verticalHeader().setVisible(False)
         t.clicked.connect(self.report_edit)
         
@@ -400,9 +400,9 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         table.setItem(row, col, table_item)
 
     def _reportsTableUpdated(self):
-        """
+        '''
         Load the reports into the list, for the selected date
-        """
+        '''
         if not self.reportmgr:
             return  # not initialized yet
         d = self.selectedDate.date().toPyDate()
@@ -419,43 +419,43 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             if a != None:
                 self._reportsTableSet(t, row, col, a.name, r._id)
             else:
-                self._reportsTableSet(t, row, col, "Unknown", r._id)
+                self._reportsTableSet(t, row, col, 'Unknown', r._id)
             col += 1
 
             # self._reportsTableSet(t, row, col, p.name, p._id)
-            self._reportsTableSet(t, row, col, "?")
+            self._reportsTableSet(t, row, col, '?')
             col += 1
 
             try:
-                tmp = r.start.strftime("%H:%M")
+                tmp = r.start.strftime('%H:%M')
             except AttributeError:
-                tmp = "None"                
+                tmp = 'None'
             self._reportsTableSet(t, row, col, tmp)
             col += 1
             
             try:
-                tmp = r.stop.strftime("%H:%M")
+                tmp = r.stop.strftime('%H:%M')
             except AttributeError:
-                tmp = "None"                
+                tmp = 'None'                
             self._reportsTableSet(t, row, col, tmp)
             col += 1
 
             if r.start != None and r.stop != None:
                 l = (r.stop - r.start).total_seconds() / 60
                 totalLen += l
-                tmp = "%02d:%02d" % (l // 60, l % 60)
+                tmp = '%02d:%02d' % (l // 60, l % 60)
             else:
-                tmp = "None"
+                tmp = 'None'
             self._reportsTableSet(t, row, col, tmp)
             col += 1
 
-            s = ""
+            s = ''
             if r.server_id != None and r.server_id > -1: 
-                s += "on server(%s)" % r.server_id
+                s += 'on server(%s)' % r.server_id
             if r.updated:
-                s += " updated"
+                s += ' updated'
             if r.deleted:
-                s += " remove"
+                s += ' remove'
             self._reportsTableSet(t, row, col, s)
             col += 1
 
@@ -466,46 +466,46 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
        
         col = 0
         
-        self._reportsTableSet(t, row, col, "Total")
+        self._reportsTableSet(t, row, col, 'Total')
         col += 1
         
-        self._reportsTableSet(t, row, col, "")
+        self._reportsTableSet(t, row, col, '')
         col += 1
         
-        self._reportsTableSet(t, row, col, "")
+        self._reportsTableSet(t, row, col, '')
         col += 1
         
-        self._reportsTableSet(t, row, col, "")
+        self._reportsTableSet(t, row, col, '')
         col += 1
         
-        self._reportsTableSet(t, row, col, "%02d:%02d" % (totalLen // 60, totalLen % 60))
+        self._reportsTableSet(t, row, col, '%02d:%02d' % (totalLen // 60, totalLen % 60))
         col += 1
         
-        self._reportsTableSet(t, row, col, "")
+        self._reportsTableSet(t, row, col, '')
         col += 1
         
-        self._reportsTableSet(t, row, col, "")
+        self._reportsTableSet(t, row, col, '')
         col += 1
 
         t.resizeColumnsToContents()
             
     def _ReportsSetCurrentDate(self, d):
-        """Helper fiunction to update date"""
-        self.selectedDate.setDate( d )
+        '''Helper fiunction to update date'''
+        self.selectedDate.setDate(d)
  
     def _ReportsSetSelectedDateToday(self):
-        self._ReportsSetCurrentDate( datetime.datetime.now() )
+        self._ReportsSetCurrentDate(datetime.datetime.now())
 
     def _ReportsSetSelectedDatePrev(self):
         d = self.selectedDate.date().addDays(-1)
-        self._ReportsSetCurrentDate( d )
+        self._ReportsSetCurrentDate(d)
         
     def _ReportsSetSelectedDateNext(self):
         d = self.selectedDate.date().addDays(1)
-        self._ReportsSetCurrentDate( d )
+        self._ReportsSetCurrentDate(d)
         
     def _ReportsUpdateWeekday(self, qd):
-        """Called by signal, so it is always updated"""    
+        '''Called by signal, so it is always updated'''
         dayname = QtCore.QDate.longDayName(qd.dayOfWeek())
         self.reportsWeekday.setText( dayname )
         self.tableReports.clearSelection()
@@ -539,9 +539,9 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.btn_report_edit.clicked.connect(self.report_edit)
 
     def report_create(self):
-        """
+        '''
         Open the report detail window, with default values for creating a new report
-        """
+        '''
         d = self.selectedDate.date().toPyDate()
         a = report_main.Report_Win(self, 
                                    activityMgr = self.activitymgr,
@@ -550,10 +550,10 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         a.exec_()
 
     def report_edit(self):
-        """
+        '''
         Open the report detail window, for editing an existing report
         Called from double-click in table, or edit button
-        """
+        '''
         row = self.tableReports.currentRow()
         row = self.tableReports.item(row, 0)
         if row:
@@ -567,9 +567,9 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
                                             report=report)
                     a.exec_()
                     return
-                log.error("Can't find report %s in local database" % _id)
+                log.error('Cannot find report %s in local database' % _id)
 
     def report_delete(self):
-        """
+        '''
         Open the report detail window, for deleting an existing report
-        """
+        '''

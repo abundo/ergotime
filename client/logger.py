@@ -62,11 +62,10 @@ level_dict = {'info': logging.INFO,
               'debug': logging.DEBUG}
     
 
-# class QtLogHandler(logging.StreamHandler):
 class QtLogHandler(logging.Handler):
-    """
+    '''
     Custom logging.Handler that outputs logging to a QT widget
-    """
+    '''
     def __init__(self):
         super().__init__(self)
         self._lines = [] # temp buffer until we have an output device
@@ -80,8 +79,6 @@ class QtLogHandler(logging.Handler):
 
     def emit(self, record):
         log_entry = self.format(record)
-#        now = datetime.datetime.now().strftime("%Y-%m-%db %H:%M:%S")
-#        line = "%s %s %s %s" % (now, threadname, self.levels[level], msg)
         if self.out != None:
             self.out.appendPlainText(log_entry)
         else:
@@ -90,16 +87,16 @@ class QtLogHandler(logging.Handler):
     
 
 class Log(QtCore.QObject):
-    """
+    '''
     Log handler. Uses signals to be thread safe
     Modeled so stdout/stderr can be directed to this class
-    """
+    '''
     logTrigger = QtCore.pyqtSignal(int, str, str)
     
     def __init__(self):
         super().__init__()
         self.out = None
-        self.levels = ["INFO", "WARNING", "ERROR", "DEBUG", "CONSOLE"]
+        self.levels = ['INFO', 'WARNING', 'ERROR', 'DEBUG', 'CONSOLE']
         self.level = _CONSOLE    # todo, from settings
         self.logTrigger.connect(self.log)
         self._lines = [] # temp buffer until we have an output device
@@ -115,8 +112,8 @@ class Log(QtCore.QObject):
 
     def log(self, level, threadname, msg):
         if level <= self.level:
-            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            line = "%s %s %s %s" % (now, threadname, self.levels[level], msg)
+            now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            line = '%s %s %s %s' % (now, threadname, self.levels[level], msg)
             if self.out != None:
                 self.out.appendPlainText(line)
                 sb = self.out.verticalScrollBar()
@@ -138,9 +135,9 @@ class Log(QtCore.QObject):
         self.logTrigger.emit(_DEBUG, threading.current_thread().getName(), msg)
 
     def debugf(self, mask, msg):
-        """
+        '''
         Show debug message, if debug for this type is enabled
-        """
+        '''
         if DEBUG_LEVEL & mask:
             self.logTrigger.emit(_DEBUG, threading.current_thread().getName(), msg)
 

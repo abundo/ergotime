@@ -50,11 +50,11 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         self.setupUi(self)
 
         self.txtPassword.setEchoMode(QtWidgets.QLineEdit.Password)
-        self.comboLoglevel.addItem("INFO")
-        self.comboLoglevel.addItem("WARNING")
-        self.comboLoglevel.addItem("ERROR")
-        self.comboLoglevel.addItem("DEBUG")
-        self.comboLoglevel.addItem("CONSOLE")
+        self.comboLoglevel.addItem('INFO')
+        self.comboLoglevel.addItem('WARNING')
+        self.comboLoglevel.addItem('ERROR')
+        self.comboLoglevel.addItem('DEBUG')
+        self.comboLoglevel.addItem('CONSOLE')
         
         self.comboFontSize.addItems(
             ['6','7','8','9','10','11','12','13','14',
@@ -68,7 +68,7 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         self.comboFontName.setFont(QFont(sett.fontName))
         self.comboFontSize.setCurrentIndex(self.comboFontSize.findText(sett.fontSize))
         self.txtUsername.setText(sett.username)
-        self.txtPassword.setText("<Not displayed>")
+        self.txtPassword.setText('<Not displayed>')
         self.spinIdleTimeout.setValue(sett.idle_timeout)
         self.txtDatabasedir.setText(sett.database_dir)
         self.comboLoglevel.setCurrentIndex( self.comboLoglevel.findText(sett.loglevel) )
@@ -87,13 +87,13 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         self.btnCancel.clicked.connect(self.cancel)
 
     def ok(self):
-        log.debugf(DEBUG_OPTIONS, "Saving new settings")
+        log.debugf(DEBUG_OPTIONS, 'Saving new settings')
 
         # Copy from GUI -> settings
         
         # ----- tab general
         
-        font = self.comboFontName.currentFont().toString().split(",")
+        font = self.comboFontName.currentFont().toString().split(',')
         sett.fontName = font[0]
         sett.fontSize = self.comboFontSize.itemText(self.comboFontSize.currentIndex())
         sett.username = self.txtUsername.text()
@@ -116,12 +116,12 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         self.accept()
       
     def cancel(self):
-        log.debugf(DEBUG_OPTIONS, "cancel, no settings saved")
+        log.debugf(DEBUG_OPTIONS, 'Cancel, no settings saved')
         self.reject()
 
 
 if __name__ == '__main__':
-    """Module test"""
+    '''Module test'''
     app = createQApplication()
     win = OptionsWin()
     win.exec_()

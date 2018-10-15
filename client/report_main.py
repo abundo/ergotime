@@ -104,13 +104,13 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
                 self.comboActivity.addItem(a.name, a.server_id)
 
         # Copy report->gui
-        s = ""
+        s = ''
         if self.report.server_id >= 0:
-            s +="on server(%s) " % self.report.server_id
+            s +='on server(%s) ' % self.report.server_id
         if self.report.updated:
-            s +="locally updated "
+            s +='locally updated '
         if self.report.deleted:
-            s +="to be deleted "
+            s +='to be deleted '
         self.lblSyncState.setText(s)
         if self.report.activityid >= 0:
             self.comboActivity.setCurrentIndex(self.comboActivity.findData(self.report.activityid))
@@ -128,56 +128,56 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         self._changed = False
 
     def _reportDetailsChangedEvent(self):
-        """
+        '''
         Called when user edits any details of a report
         Save is enabled, delete is disabled
-        """
+        '''
         self._changed = True
         self.btnSave.setDisabled(False)
         self.btnDelete.setDisabled(True)
 
     def _reportDetailsModifyStart(self):
-        """
+        '''
         Handle the start +H -H +S -S buttons
-        """
+        '''
         sender=self.sender()
         if isinstance(sender, QtWidgets.QToolButton):
             action = sender.text()
             dtstart = self.dtStart.dateTime()
             dtstop = self.dtStop.dateTime()
-            if action == "+H":
+            if action == '+H':
                 sec = 3600
-            elif action == "-H":
+            elif action == '-H':
                 sec = -3600
-            elif action == "+M":
+            elif action == '+M':
                 sec = 60
-            elif action == "-M":
+            elif action == '-M':
                 sec = -60
             self.dtStart.setDateTime(dtstart.addSecs(sec))
             self.dtStop.setDateTime(dtstop.addSecs(sec))
 
     def _reportDetailsModifyStop(self):
-        """
+        '''
         Handle the stop +H -H +S -S buttons
-        """
+        '''
         sender=self.sender()
         if isinstance(sender, QtWidgets.QToolButton):
             action = sender.text()
             dtstop = self.dtStop.dateTime()
-            if action == "+H":
+            if action == '+H':
                 sec = 3600
-            elif action == "-H":
+            elif action == '-H':
                 sec = -3600
-            elif action == "+M":
+            elif action == '+M':
                 sec = 60
-            elif action == "-M":
+            elif action == '-M':
                 sec = -60
             self.dtStop.setDateTime(dtstop.addSecs(sec))
 
     def _reportDetailsUpdateLength(self):
-        """
+        '''
         Called when start or stop datetime changed
-        """
+        '''
         start = self.dtStart.dateTime().toPyDateTime()
         stop = self.dtStop.dateTime().toPyDateTime()
         if stop < start:
@@ -193,7 +193,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         # update report object from GUI
         activityid = self.comboActivity.itemData(self.comboActivity.currentIndex())
         if not activityid or activityid < 1:
-            log.warning("Cannot save report, no activity selected")
+            log.warning('Cannot save report, no activity selected')
             return
         self.report.activityid = activityid
         # todo project
@@ -203,7 +203,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
 
         if not self.reportMgr.store(self.report):
             msgBox = QtWidgets.QMessageBox(parent=self)
-            msgBox.setText("Error saving report")
+            msgBox.setText('Error saving report')
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
             msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
             response = msgBox.exec_()
@@ -213,7 +213,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
 
     def delete(self):
         msgBox = QtWidgets.QMessageBox(parent=self)
-        msgBox.setText("Do you want to delete the report?")
+        msgBox.setText('Do you want to delete the report?')
         msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
         response = msgBox.exec_()
@@ -225,7 +225,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
     def cancel(self):
         if self._changed:
             msgBox = QtWidgets.QMessageBox(parent=self)
-            msgBox.setText("Do you want to cancel your changes?")
+            msgBox.setText('Do you want to cancel your changes?')
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
             response = msgBox.exec_()
@@ -237,9 +237,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
 
 
 if __name__ == '__main__':
-    """
-    Module test
-    """
+    '''Module test'''
     app = createQApplication()
 
     tmp_default_date = datetime.datetime.now().date()

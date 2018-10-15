@@ -38,6 +38,7 @@ import PyQt5.QtWidgets as QtWidgets
 
 from myglobals import *
 from logger import log
+import timetracker
 
 class Systray(QtWidgets.QWidget):
 
@@ -48,13 +49,14 @@ class Systray(QtWidgets.QWidget):
         self.activitymgr = activitymgr
         
         self.trayicon = QtWidgets.QSystemTrayIcon()
-        self.icon = QtGui.QIcon("resource/tray-inactive.png")
+        self.icon = QtGui.QIcon('resource/tray-inactive.png')
         self.trayicon.setIcon(self.icon)
         
         self.noaction = QtWidgets.QAction(self)
-        self.noaction.setText("No activity")
+        self.noaction.setText('No activity')
         self.noaction.setCheckable(True)
         self.noaction.setData(-1)
+        self.noaction.triggered.connect(self.setNoAction)
 
         self.timetracker.stateSignal.connect( self.stateChanged )
         
@@ -63,7 +65,7 @@ class Systray(QtWidgets.QWidget):
 
 
     def activityListUpdated(self):
-        """Called when the list of activities has been updated, usually after sync with server"""
+        '''Called when the list of activities has been updated, usually after sync with server'''
         trayiconmenu = QtWidgets.QMenu()
         
         for activity in self.activitymgr.getList():
@@ -80,7 +82,7 @@ class Systray(QtWidgets.QWidget):
         trayiconmenu.addAction(self.noaction)
         trayiconmenu.addSeparator()
         action = QtWidgets.QAction(self)
-        action.setText("Exit")
+        action.setText('Exit')
         trayiconmenu.addAction(action)
         
         self.trayicon.setContextMenu(trayiconmenu)
@@ -88,10 +90,12 @@ class Systray(QtWidgets.QWidget):
         self.trayicon.show()
         
     def setAction(self):
-        log.debugf(DEBUG_SYSTRAY, "setAction()")
+        log.debugf(DEBUG_SYSTRAY, 'setAction()')
+        # self.timetracker.setStateActive()
     
     def setNoAction(self):
-        log.debugf(DEBUG_SYSTRAY, "setNoAction")
+        log.debugf(DEBUG_SYSTRAY, 'setNoAction')
+        self.timetracker.setStateInactive()
     
     def updateCheckedAction(self):
         currentactivityid = -1
@@ -104,7 +108,7 @@ class Systray(QtWidgets.QWidget):
         self.noaction.setChecked( currentactivityid < 0)
     
     def stateChanged(self, state):
-        """Called when state changes"""
+        '''Called when state changes'''
         if state == self.timetracker.stateInactive:
             pass
         elif state == self.timetracker.stateActive:

@@ -60,21 +60,21 @@ DEBUG_LEVEL |= DEBUG_SYSTRAY     * 1
 # ----------------------------------------------------------------------
 
 
-runFromIde = "runFromIde" in os.environ
+runFromIde = 'runFromIde' in os.environ
 
 
 # Create datadir in the users home directory
 
-userdir = os.path.expanduser("~") + os.sep + ".ergotime"
+userdir = os.path.expanduser('~') + os.sep + '.ergotime'
 if not os.path.exists(userdir):
     os.mkdir(userdir)
 
-userconffile = userdir + os.sep + "ergotime.ini" 
+userconffile = userdir + os.sep + 'ergotime.ini' 
 
 if DEBUG_LEVEL & DEBUG_FILES:
-    localDatabaseName = "ergotime-devel.db" # todo find out automatically if we are running from the IDE
+    localDatabaseName = 'ergotime-devel.db' # todo find out automatically if we are running from the IDE
 else:
-    localDatabaseName = "ergotime.db"
+    localDatabaseName = 'ergotime.db'
 localDatabaseName = userdir + os.sep + localDatabaseName
 
 
@@ -82,7 +82,7 @@ def createQApplication():
     app = QtWidgets.QApplication(sys.argv)
     
     app.setQuitOnLastWindowClosed(False);
-    app.setOrganizationName("Abundo AB");
-    app.setOrganizationDomain("abundo.se");
-    app.setApplicationName("ErgoTime");
+    app.setOrganizationName('Abundo AB');
+    app.setOrganizationDomain('abundo.se');
+    app.setApplicationName('ErgoTime');
     return app

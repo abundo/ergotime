@@ -57,39 +57,37 @@ class MySettings(QtCore.QObject):
     main_win_size          = AttrTypDefault(QtCore.QSize, QtCore.QSize(600,400))
     main_win_splitter_1    = AttrTypDefault(QByteArray, NO_DEFAULT)
     
-    fontName               = AttrTypDefault(str, "MS Shell Dlg 2")
-    fontSize               = AttrTypDefault(str, "9")
+    fontName               = AttrTypDefault(str, 'MS Shell Dlg 2')
+    fontSize               = AttrTypDefault(str, '9')
     username               = AttrTypDefault(str, getpass.getuser())
-    password               = AttrTypDefault(str, "")
+    password               = AttrTypDefault(str, '')
     idle_timeout           = AttrTypDefault(int, 600)
-    database_dir           = AttrTypDefault(str, "")      # todo userdir + ".ergotime"
-    loglevel               = AttrTypDefault(str, "INFO")
+    database_dir           = AttrTypDefault(str, '')      # todo userdir + '.ergotime'
+    loglevel               = AttrTypDefault(str, 'INFO')
     
     activity_sync_interval = AttrTypDefault(int, 600)
     
     report_sync_interval   = AttrTypDefault(int, 600)
     
-    server_url             = AttrTypDefault(str, "http://ergotime.int.abundo.se")
+    server_url             = AttrTypDefault(str, 'http://ergotime.example.com')
     networkTimeout         = AttrTypDefault(int, 60)
 
     localDatabaseName      = localDatabaseName
 
     def _attriter(self):
-        """
+        '''
         Iterate through all settings
-        """
+        '''
         for var in vars(self):
             tmp = getattr(self, var)
             print(var, type(tmp))
-            #if inspect.isclass(tmp, AttrTypDefault):
-            #    yield var, tmp
 
     def __init__(self):
         super().__init__()
         self._settings = {}
         self.qsettings = QtCore.QSettings(userconffile, QtCore.QSettings.IniFormat)
         self.qsettings.setFallbacksEnabled(False)
-        log.debugf(DEBUG_SETTINGS, "Settings stored in file %s" % self.qsettings.fileName())
+        log.debugf(DEBUG_SETTINGS, 'Settings stored in file %s' % self.qsettings.fileName())
         
         # Go through all supperted settings and load them
         # This creates instance variables overriding the class variables
@@ -102,13 +100,13 @@ class MySettings(QtCore.QObject):
                 value = self.qsettings.value(attr, atd.default, type=atd.type)
             else:
                 value = self.qsettings.value(attr, type=atd.type)
-            log.debugf(DEBUG_SETTINGS, "Loaded setting %s = %s" % (attr, value))
+            log.debugf(DEBUG_SETTINGS, 'Loaded setting %s = %s' % (attr, value))
             object.__setattr__(self, attr, value)
 
     def __setattr__(self, attr, value):
         try:
             atd = self._settings[attr]
-            log.debugf(DEBUG_SETTINGS, "Storing setting %s,%s = %s" % (attr, str(atd.type), value))
+            log.debugf(DEBUG_SETTINGS, 'Storing setting %s,%s = %s' % (attr, str(atd.type), value))
             if value != atd.default or value != getattr(self, attr):    # only write non-default values
                 self.qsettings.setValue(attr, value)
                 object.__setattr__(self, attr, value)

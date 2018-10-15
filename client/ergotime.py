@@ -54,9 +54,9 @@ old_stderr = sys.stderr
 
 
 def handle_exception(exc_type, exc_value, exc_traceback):
-    """
+    '''
     handle all python exceptions, show a dialog box with the error
-    """
+    '''
 
     # KeyboardInterrupt is a special case.
     # We don't raise the error dialog when it occurs.
@@ -66,30 +66,30 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 
     filename, line, dummy, dummy = traceback.extract_tb(exc_traceback).pop()
     filename = os.path.basename(filename)
-    error    = "%s: %s" % (exc_type.__name__, exc_value)
+    error    = '%s: %s' % (exc_type.__name__, exc_value)
 
-    QtWidgets.QMessageBox.critical(None,"Error",
-        "<html>A critical error has occured.<br/> "
-        + "<b>%s</b><br/><br/>" % error
-        + "It occurred at <b>line %d</b> of file <b>%s</b>.<br/>" % (line, filename)
-        + "</html>")
+    QtWidgets.QMessageBox.critical(None,'Error',
+        '<html>A critical error has occured.<br/> '
+        + '<b>%s</b><br/><br/>' % error
+        + 'It occurred at <b>line %d</b> of file <b>%s</b>.<br/>' % (line, filename)
+        + '</html>')
 
-    print("Closed due to an error. This is the full error report:")
+    print('Closed due to an error. This is the full error report:')
     print()
-    print("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+    print(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
     sys.exit(1)
   
 
 def main_():
     global app
-    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"     # Handle HIDPI
+    os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'     # Handle HIDPI
     app = QtWidgets.QApplication(sys.argv)
     app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     
     app.setQuitOnLastWindowClosed(False);
-    app.setOrganizationName("Abundo AB");
-    app.setOrganizationDomain("abundo.se");
-    app.setApplicationName("ErgoTime");
+    app.setOrganizationName('Abundo AB');
+    app.setOrganizationDomain('abundo.se');
+    app.setApplicationName('ErgoTime');
 
     sys.excepthook = handle_exception
 
@@ -101,7 +101,7 @@ def main_():
         # Restore stdout/stderr so we can see the error
         sys.stdout = old_stdout
         sys.stderr = old_stderr
-        print("Error: %s" % e)
+        print('Error: %s' % e)
 
 if __name__ == '__main__':
     main_()

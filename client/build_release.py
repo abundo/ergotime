@@ -37,14 +37,14 @@ import sys
 import shutil
 
 # Remove the existing folders
-shutil.rmtree("build", ignore_errors=True)
+shutil.rmtree('build', ignore_errors=True)
 
-sys.path.append("d:/hack/eclipse/ergotime")
+sys.path.append('d:/hack/eclipse/ergotime')
 
-includes = ["logging.handlers", "sqlite3", "codecs"]
+includes = ['logging.handlers', 'sqlite3', 'codecs']
 includefiles = []
 excludes = []
-packages = ["atexit"]
+packages = ['atexit']
 
 # This is a place where the user custom code may go. You can do almost
 # whatever you want, even modify the data_files, includes and friends
@@ -52,38 +52,38 @@ packages = ["atexit"]
 # below is expecting.
 
 base = None
-if sys.platform == "win32":
-    base = "Win32GUI"
+if sys.platform == 'win32':
+    base = 'Win32GUI'
 
 GUI2Exe_Target_1 = Executable(
     # what to build
-    script = "ergotime.py",
+    script = 'ergotime.py',
     initScript = None,
     base = base,
     
-    targetName = "ergotime.exe",
+    targetName = 'ergotime.exe',
 #    compress = False,
 #    copyDependentFiles = True,
 #    copy_dependent_files = True,
 #    appendScriptToExe = False,
 #    append_script_to_exe = False,
 #    appendScriptToLibrary = False,
-    icon = "resource/ergotime.ico"
+    icon = 'resource/ergotime.ico'
 )
 
 
 # BUild target
 setup(
-    name = "ErgoTime Client",
-    version = "1.0.1",
-    description = "ErgoTime Client",
-    author = "Anders Löwinger",
+    name = 'ErgoTime Client',
+    version = '1.0.1',
+    description = 'ErgoTime Client',
+    author = 'Anders Löwinger',
 
-    options = {"build_exe": {"includes": includes,
-                             "include_files": includefiles,
-                             "excludes": excludes,
-                             "packages": packages,
-                             "path": sys.path,
+    options = {'build_exe': {'includes': includes,
+                             'include_files': includefiles,
+                             'excludes': excludes,
+                             'packages': packages,
+                             'path': sys.path,
                              }
                },
 
