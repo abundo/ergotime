@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import queue
 import threading
+import random
 from orderedattrdict import AttrDict
 
 import PyQt5.QtCore as QtCore
@@ -53,14 +54,54 @@ class ActivityMgr(QtCore.QObject):
     def __init__(self, localdb=None):
         super().__init__()
         self.localdb = localdb
-        
+
+        self.periodicsync_timer = None
+                
         self.activities = []
         self.activities_id = {}
         self.toThreadQ = queue.Queue()
         self.t = threading.Thread(target=self.run)
-        self.t.setName("ActivityMGR")
+        self.t.setName("ActivityMgr")
         self.t.daemon = True
         self.t.start()
+
+        sett.updated.connect(self.handle_settings)
+        self.handle_settings()
+
+    def handle_settings(self):
+        """
+        Handle changes in settings
+        """
+        if sett.activity_sync_interval:
+            if self.periodicsync_timer:
+                # has the interval changed?
+                if self.periodicsync_timer.interval != sett.activity_sync_interval:
+                    self.periodicsync_timer.cancel()
+                    self.periodicsync_timer = None
+            if self.periodicsync_timer is None:
+                log.debug("ActivityMgr starting autosync timer, interval %s" % sett.activity_sync_interval)
+                self._start_periodicsync_timer()
+        else:
+            if self.periodicsync_timer:
+                log.debug("ActivityMgr stopping autosync timer")
+                self.periodicsync_timer.cancel()
+            self.periodicsync_timer = None
+
+    def _start_periodicsync_timer(self):
+        jitter = sett.activity_sync_interval // 10    # 10% jitter
+        if jitter < 1:
+            jitter = 1
+        interval = sett.activity_sync_interval + random.randint(-jitter, jitter)
+        log.debug("ActivityMgr interval %s jitter %s" % (interval, jitter))
+        self.periodicsync_timer = threading.Timer(interval, self.periodic_sync)
+        self.periodicsync_timer.daemon = True
+        self.periodicsync_timer.setName("ActivityMgr.Timer")
+        self.periodicsync_timer.start()
+
+    def periodic_sync(self):
+        log.debug("ActivityMgr.periodic_sync triggered")
+        self.sync()
+        self._start_periodicsync_timer()
         
     def init(self):
         """Load the list of activities from local db"""
@@ -94,7 +135,7 @@ class ActivityMgr(QtCore.QObject):
             self.activities.append(activity)
             self.activities_id[activity.server_id] = activity
         return
-    
+
     def sync(self):
         """
         Sync the local database with the one on the server
@@ -102,6 +143,8 @@ class ActivityMgr(QtCore.QObject):
         self.toThreadQ.put("sync")
 
     def stop(self):
+        if self.periodicsync_timer and self.periodicsync_timer.is_alive():
+            self.periodicsync_timer.cancel()
         self.toThreadQ.put("quit")
 
 
@@ -131,7 +174,7 @@ class ActivityMgr(QtCore.QObject):
             sql = "SELECT * FROM activity WHERE server_id=?"
             local_activity = self.localdb.select_one(sql, (srv_activity["_id"],) )
             if local_activity:
-                # we have the report locally, check if changed
+                # we have the activity locally, check if changed
                 changes = []
                 for attr in ['name', "description", "active", "project_id"]:
                     if getattr(local_activity, attr) != getattr(srv_activity, attr):

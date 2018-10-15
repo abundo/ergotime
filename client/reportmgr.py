@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import datetime
 import queue
 import threading
+import random
 
 import PyQt5.QtCore as QtCore
 
@@ -53,6 +54,7 @@ class ReportMgr(QtCore.QObject):
         super().__init__()
         self.localdb = localdb
 
+        self.periodicsync_timer = None
         self._autosync = False
         self.reports = []   # local cache for todays reports
         self.toThreadQ = queue.Queue()
@@ -60,6 +62,44 @@ class ReportMgr(QtCore.QObject):
         self.t.setName("ReportMgr")
         self.t.daemon = True
         self.t.start()
+        
+        sett.updated.connect(self.handle_settings)
+        self.handle_settings()
+
+    def handle_settings(self):
+        """
+        Handle changes in settings
+        """
+        if sett.report_sync_interval:
+            if self.periodicsync_timer:
+                # has the interval changed?
+                if self.periodicsync_timer.interval != sett.report_sync_interval:
+                    self.periodicsync_timer.cancel()
+                    self.periodicsync_timer = None
+            if self.periodicsync_timer is None:
+                log.debug("ReportMgr starting autosync timer, interval %s" % sett.report_sync_interval)
+                self._start_periodicsync_timer()
+        else:
+            if self.periodicsync_timer:
+                log.debug("ReportMgr stopping autosync timer")
+                self.periodicsync_timer.cancel()
+            self.periodicsync_timer = None
+
+    def _start_periodicsync_timer(self):
+        jitter = sett.report_sync_interval // 10    # 10% jitter
+        if jitter < 1:
+            jitter = 1
+        interval = sett.report_sync_interval + random.randint(-jitter, jitter) 
+        log.debug("ReportMgr interval %s jitter %s" % (interval, jitter))
+        self.periodicsync_timer = threading.Timer(interval, self.periodic_sync)
+        self.periodicsync_timer.setName("ReportMgr.Timer")
+        self.periodicsync_timer.daemon = True
+        self.periodicsync_timer.start()
+
+    def periodic_sync(self):
+        log.debug("ReportMgr.periodic_sync triggered")
+        self.sync()
+        self._start_periodicsync_timer()
 
     def init(self):
         """Load the list of reports from local db"""
@@ -96,8 +136,8 @@ class ReportMgr(QtCore.QObject):
         """
         # todo, use count(*)
         sql = "SELECT count(*) FROM report WHERE server_id < 0"
-        reports = self.localdb.select_all(sql)
-        return len(reports)
+        unsync_reports_count = self.localdb.count(sql) 
+        return unsync_reports_count
     
     def store(self, report):
         try:
@@ -114,17 +154,20 @@ class ReportMgr(QtCore.QObject):
         return True
 
     def remove(self, report):
+        """
+        Returns True if report deleted successfully
+        """
         ret = False
         try:
             if report.server_id != None and report.server_id >= 0:
                 # Report exist on server, mark for removal - next sync will remove the row
                 report.deleted = 1
                 self.localdb.update("report", d=report, primary_key="_id")
-                ret = True
             else:
                 # Report does not exist on server, can be removed directly
                 sql = "DELETE FROM report WHERE _id=?"
-                self.localdb.delete(sql, (report._id))
+                self.localdb.delete(sql, (report._id,))
+            ret = True
             self.sig.emit()
             if self._autosync:
                 self.sync()
@@ -142,6 +185,8 @@ class ReportMgr(QtCore.QObject):
         self.toThreadQ.put( ["sync"] )
 
     def stop(self):
+        if self.periodicsync_timer and self.periodicsync_timer.is_alive():
+            self.periodicsync_timer.cancel()
         self.toThreadQ.put( ["quit"] )
 
 

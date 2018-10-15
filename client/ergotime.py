@@ -32,6 +32,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
+import os
 import os.path
 import builtins
 
@@ -41,6 +42,7 @@ import sys
 import traceback
 import encodings.idna   # make sure cxfreeze includes the module
 
+import PyQt5.QtCore as QtCore
 import PyQt5.QtGui as QtGui
 import PyQt5.QtWidgets as QtWidgets
 
@@ -52,7 +54,9 @@ old_stderr = sys.stderr
 
 
 def handle_exception(exc_type, exc_value, exc_traceback):
-    """ handle all exceptions """
+    """
+    handle all python exceptions, show a dialog box with the error
+    """
 
     # KeyboardInterrupt is a special case.
     # We don't raise the error dialog when it occurs.
@@ -60,9 +64,9 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         if app:
             app.quit()
 
-    filename, line, dummy, dummy = traceback.extract_tb( exc_traceback ).pop()
-    filename = os.path.basename( filename )
-    error    = "%s: %s" % ( exc_type.__name__, exc_value )
+    filename, line, dummy, dummy = traceback.extract_tb(exc_traceback).pop()
+    filename = os.path.basename(filename)
+    error    = "%s: %s" % (exc_type.__name__, exc_value)
 
     QtWidgets.QMessageBox.critical(None,"Error",
         "<html>A critical error has occured.<br/> "
@@ -75,9 +79,12 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     print("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
     sys.exit(1)
   
+
 def main_():
     global app
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"     # Handle HIDPI
     app = QtWidgets.QApplication(sys.argv)
+    app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     
     app.setQuitOnLastWindowClosed(False);
     app.setOrganizationName("Abundo AB");
