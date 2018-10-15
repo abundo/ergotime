@@ -307,8 +307,6 @@ def addActivity(activity=None,
         tmp = activity.description
     else:
         tmp = activity.name
-    if activity.project_id:
-        tmp += ", " + activity.project_id
     
     stop = start.copy()
     stop.setFirstDayInMonth(1)
