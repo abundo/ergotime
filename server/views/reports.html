@@ -35,9 +35,9 @@ Debug:
 <thead>
 <tr>
  <th class='text-right col-md-1' style='width:1%'>Date</th>
- <th class='text-right col-md-1' style='width:1%'>Start</th>
- <th class='text-right col-md-1' style='width:1%'>Stop</th>
- <th class='text-right col-md-1' style='width:1%'>Time</th>
+ <th class='text-center col-md-1' style='width:1%'>Start</th>
+ <th class='text-center col-md-1' style='width:1%'>Stop</th>
+ <th class='text-center col-md-1' style='width:1%'>Time</th>
  <th class='col-md-8'>Comment</th>
 </tr>
 </thead>
@@ -45,13 +45,13 @@ Debug:
 {% for report in activityDay.reports %}
 <tr valign='top'>
 {% if loop.first %}
-<td  class='text-right' style='white-space: nowrap'>{{report.start.strftime('%Y-%m-%d')}}</td>
+<td  class='text-center' style='white-space: nowrap'>{{report.start.strftime('%Y-%m-%d')}}</td>
 {% else %}
     <td>&nbsp;</td>
 {% endif %}
-<td class='text-right' style='white-space: nowrap'>{{ report.start.strftime('%H:%M') }}</td>
-<td class='text-right' style='white-space: nowrap'>{{ report.stop.strftime('%H:%M') }}</td>
-<td class='text-right' style='white-space: nowrap'>{{ report.strLength() }}</td>
+<td class='text-center' style='white-space: nowrap'>{{ report.start.strftime('%H:%M') }}</td>
+<td class='text-center' style='white-space: nowrap'>{{ report.stop.strftime('%H:%M') }}</td>
+<td class='text-center' style='white-space: nowrap'>{{ report.strLength() }}</td>
 
 {% set tmp = '' %}
 <td class='text-left' >
@@ -69,8 +69,8 @@ Debug:
  <td>&nbsp;</td>
  <td>&nbsp;</td>
  <td>&nbsp;</td>
- <td class='text-right' style='white-space: nowrap'>{{ activityDay.strTotal() }}</td> 
- <td><strong>Day total</strong></td>
+ <td class='text-left' style='white-space: nowrap'>{{ activityDay.strTotal(includeDecimal=True) }}</td> 
+ <td><strong>Total for day</strong></td>
 </tr>
 
 {% endfor %}
