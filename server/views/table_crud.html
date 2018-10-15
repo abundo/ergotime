@@ -23,12 +23,14 @@ function addEditPopup (sel_recid, records) {
             formHTML: 
                 '<div class="w2ui-page page-0">'+
 {% for col in columns -%}
+  {% if "c" in col.display %}
                 '    <div class="w2ui-field">'+
-                '        <label>{{ col['title'] }}</label>'+
+                '        <label>{{ col.title }}</label>'+
                 '        <div>'+
-                '           <input name="{{ col['name'] }}" type="text"  maxlength="100" style="width: 250px"/>'+
+                '           <input name="{{ col.name }}" type="{{ col.type }}"  maxlength="100" style="width: 250px"/>'+
                 '        </div>'+
                 '    </div>'+
+  {% endif %}
 {% endfor -%}
                 '</div>'+
                 '<div class="w2ui-buttons">'+
@@ -37,7 +39,9 @@ function addEditPopup (sel_recid, records) {
                 '</div>',
             fields: [
                 {% for col in columns -%}
-                { field: '{{ col['name'] }}', type: 'text' },
+                {% if col.name != data.primary_key %}
+                { field: '{{ col.name }}', type: '{{ col.type }}' },
+                {% endif %}
                 {% endfor -%}
             ],
             actions: {

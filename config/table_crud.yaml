@@ -7,29 +7,37 @@ activity:
     type: text
     title: ID
     edit: false
+    display: l
   - name: name
     type: text
     title: Name
     edit: true
     search: true
+    display: lcu
   - name: active
     type: checkbox
     title: Active
     edit: true
+    display: lcu
+    default: false
   - name: description
     type: text
     title: Description
     edit: true
     search: true
+    display: lcu
   - name: project_id
     type: text
     title: Project ID
     edit: true
     search: true
+    display: lcu
   - name: server_id
     type: text
     title: Server ID
     edit: true
+    display: l
+    default: -1
   sortdata:
   -  name: name
      direction: 'ASC'
@@ -42,22 +50,27 @@ project:
     type: text
     title: ID
     edit: false
+    display: l
   - name: activityid
     type: text
     title: ID
     edit: true
+    display: lcu
   - name: name
     type: text
     title: Name
     edit: true
+    display: lcu
   - name: costcenter
     type: text
     title: Cost center
     edit: true
+    display: lcu
   - name: active
     type: checkbox
     title: Active
     edit: true
+    display: lcu
   sortdata:
   -  name: name
      direction: 'ASC'
@@ -70,30 +83,37 @@ report:
     type: text
     title: ID
     edit: false
+    display: l
   - name: activityid
     type: text
     title: Activity ID
     edit: false
+    display: lcu
   - name: start
     type: date
     title: Start
     edit: true
+    display: lcu
   - name: stop
     type: text
     title: Stop
     edit: true
+    display: lcu
   - name: commment
     type: text
     title: Comment
     edit: true
+    display: lcu
   - name: user_id
     type: text
     title: User ID
     edit: true
+    display: lcu
   - name: modified
-    type: text
+    type: date
     title: Modified
     edit: true
+    display: lcu
   sortdata:
   -  name: start
      direction: 'ASC'
@@ -106,19 +126,22 @@ users:
     type: text
     title: ID
     edit: false
+    display: l
   - name: name
     type: text
     title: Name
     edit: true
+    display: lcu
   - name: password
     type: text
     title: Password
     edit: true
+    display: lcu
   - name: active
     type: checkbox
     title: Active
     edit: true
+    display: lcu
   sortdata:
   -  name: name
      direction: 'ASC'
-
