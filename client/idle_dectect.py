@@ -6,7 +6,7 @@ Idle detector
 
 Support:
 - Windows
-
+- Linux
 '''
 
 '''
@@ -40,7 +40,7 @@ import os
 import platform
 
 import ctypes
-import struct
+import ctypes.util
 
 
 class WindowsIdleDetect:
@@ -56,9 +56,9 @@ class WindowsIdleDetect:
         self.lastInputInfo.cbSize = ctypes.sizeof(self.lastInputInfo)
     
     def getIdle(self):
-        """
+        '''
         Returns idle time in seconds
-        """
+        '''
         ctypes.windll.user32.GetLastInputInfo(ctypes.byref(self.lastInputInfo))
         idle_ms = ctypes.windll.kernel32.GetTickCount() - self.lastInputInfo.dwTime
         return idle_ms // 1000
@@ -67,9 +67,9 @@ class WindowsIdleDetect:
 class LinuxIdleDetect:
 
     class XScreenSaverInfo( ctypes.Structure):
-      """
+      '''
       typedef struct { ... } XScreenSaverInfo;
-      """
+      '''
       _fields_ = [('window',      ctypes.c_ulong), # screen saver window
                   ('state',       ctypes.c_int),   # off,on,disabled
                   ('kind',        ctypes.c_int),   # blanked,internal,external
@@ -78,37 +78,74 @@ class LinuxIdleDetect:
                   ('event_mask',  ctypes.c_ulong)] # events
     
     def __init__(self):
-        # libraries
-        self.xlib = ctypes.cdll.LoadLibrary("libX11.so.6")
-        self.xss  = ctypes.cdll.LoadLibrary("libXss.so.1")
-        
-        self.display = self.xlib.XOpenDisplay(bytes(os.environ["DISPLAY"], 'ascii'))
-        self.root = self.xlib.XDefaultRootWindow(self.display)
-        self.xss.XScreenSaverAllocInfo.restype = ctypes.POINTER(self.XScreenSaverInfo)
-        self.xss_info = self.xss.XScreenSaverAllocInfo()
-        
+        XScreenSaverInfo_p = ctypes.POINTER(self.XScreenSaverInfo)
+        display_p = ctypes.c_void_p
+        xid = ctypes.c_ulong
+        c_int_p = ctypes.POINTER(ctypes.c_int)
+        try:
+            libX11path = ctypes.util.find_library('X11')
+            if libX11path == None:
+                raise OSError('libX11 could not be found.')
+            libX11 = ctypes.cdll.LoadLibrary(libX11path)
+            libX11.XOpenDisplay.restype = display_p
+            libX11.XOpenDisplay.argtypes = ctypes.c_char_p,
+            libX11.XDefaultRootWindow.restype = xid
+            libX11.XDefaultRootWindow.argtypes = display_p,
+            
+            libXsspath = ctypes.util.find_library('Xss')
+            if libXsspath == None:
+                raise OSError('libXss could not be found.')
+            self.libXss = ctypes.cdll.LoadLibrary(libXsspath)
+            self.libXss.XScreenSaverQueryExtension.argtypes = display_p, c_int_p, c_int_p
+            self.libXss.XScreenSaverAllocInfo.restype = XScreenSaverInfo_p
+            self.libXss.XScreenSaverQueryInfo.argtypes = (display_p, xid, XScreenSaverInfo_p)
+            self.dpy_p = libX11.XOpenDisplay(None)
+            if self.dpy_p == None:
+                raise OSError('Could not open X Display.')
+            _event_basep = ctypes.c_int()
+            _error_basep = ctypes.c_int()
+            if self.libXss.XScreenSaverQueryExtension(self.dpy_p, ctypes.byref(_event_basep),
+                            ctypes.byref(_error_basep)) == 0:
+                raise OSError('XScreenSaver Extension not available on display.')
+            self.xss_info_p = self.libXss.XScreenSaverAllocInfo()
+            if self.xss_info_p == None:
+                raise OSError('XScreenSaverAllocInfo: Out of Memory.')
+            self.rootwindow = libX11.XDefaultRootWindow(self.dpy_p)
+            self.xss_available = True
+        except OSError:
+            # Logging?
+            self.xss_available = False
+
+
     def get_idle(self):
-        """
-        Returns idle time in seconds
-        """
-        self.xss.XScreenSaverQueryInfo( self.display, self.root, self.xss_info)
-        idle_ms = self.xss_info.contents.idle 
-        return idle_ms // 1000
+        '''
+        Return the idle time in seconds
+        '''
+        if self.xss_available:
+            if self.libXss.XScreenSaverQueryInfo(self.dpy_p, self.rootwindow, self.xss_info_p):
+                return int(self.xss_info_p.contents.idle) / 1000
+        return 0
         
 
 class DummyIdleDetect:
-
+    '''
+    This idle detector is always returning zero (not idle)
+    Used when no supported idle detector can be found
+    '''
     def get_idle(self):
         return 0
 
 
-if platform.system() == "Windows":
-    idle_detector = WindowsIdleDetect()
+idle_detector = None
+try:
+    if platform.system() == 'Windows':
+        idle_detector = WindowsIdleDetect()
+    elif platform.system() == 'Linux':
+        idle_detector = LinuxIdleDetect()
+except OSerror:
+    pass
 
-elif platform.system() == "Linux":
-    idle_detector = LinuxIdleDetect()
-
-else:
+if not idle_detector:
     idle_detector = DummyIdleDetect()
 
 
@@ -117,9 +154,9 @@ def getIdle():
 
 
 if __name__ == '__main__':
-    """Test code for idle detect"""
+    '''Module test'''
     import time
     while True:
         idle = getIdle()
-        print("Idle:", idle)
+        print('Idle:', idle)
         time.sleep(1)
