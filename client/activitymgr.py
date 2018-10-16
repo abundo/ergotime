@@ -176,7 +176,7 @@ class ActivityMgr(QtCore.QObject):
             if local_activity:
                 # we have the activity locally, check if changed
                 changes = []
-                for attr in ['name', "description", "active", "project_id"]:
+                for attr in ['name', "description", "active"]:
                     if getattr(local_activity, attr) != getattr(srv_activity, attr):
                         changes.append(attr)
                 if len(changes):
