@@ -158,8 +158,8 @@ class Timetracker(QtCore.QObject):
         self.reportmgr.store(self.report)
 
     def _seconds_to_time(self, seconds):
-        hour, remainder = seconds // 3600, seconds % 3600
-        minute, second = remainder // 60, remainder % 60   
+        hour, remainder = int(seconds // 3600), int(seconds % 3600)
+        minute, second = int(remainder // 60), int(remainder % 60)
         return datetime.time(hour, minute, second)
                     
     def _update(self):
