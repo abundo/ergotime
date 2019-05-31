@@ -171,7 +171,7 @@ class Timetracker(QtCore.QObject):
         td = self.report.stop - self.report.start
         self._status.length = self._seconds_to_time(td.seconds)
 
-        idle_seconds = idle_dectect.getIdle()
+        idle_seconds = idle_dectect.get_idle()
         self._status.idle = self._seconds_to_time(idle_seconds)      
         if idle_seconds > sett.idle_timeout:
             log.info("Idle timeout detected")

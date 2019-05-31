@@ -48,11 +48,11 @@ class WindowsIdleDetect:
             ('dwTime', ctypes.c_uint),
         ]
 
-    def __init_(self):
+    def __init__(self):
         self.lastInputInfo = self.LASTINPUTINFO()
         self.lastInputInfo.cbSize = ctypes.sizeof(self.lastInputInfo)
     
-    def getIdle(self):
+    def get_idle(self):
         '''
         Returns idle time in seconds
         '''
@@ -133,20 +133,16 @@ class DummyIdleDetect:
         return 0
 
 
-idle_detector = None
 try:
     if platform.system() == 'Windows':
         idle_detector = WindowsIdleDetect()
     elif platform.system() == 'Linux':
         idle_detector = LinuxIdleDetect()
-except OSerror:
-    pass
-
-if not idle_detector:
+except OSError:
     idle_detector = DummyIdleDetect()
 
 
-def getIdle():
+def get_idle():
     return idle_detector.get_idle()
 
 
@@ -154,6 +150,6 @@ if __name__ == '__main__':
     '''Module test'''
     import time
     while True:
-        idle = getIdle()
+        idle = get_idle()
         print('Idle:', idle)
         time.sleep(1)
