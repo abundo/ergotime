@@ -86,10 +86,10 @@ def main_():
     app = QtWidgets.QApplication(sys.argv)
     app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     
-    app.setQuitOnLastWindowClosed(False);
-    app.setOrganizationName("Abundo AB");
-    app.setOrganizationDomain("abundo.se");
-    app.setApplicationName("ErgoTime");
+    app.setQuitOnLastWindowClosed(False)
+    app.setOrganizationName("Abundo AB")
+    app.setOrganizationDomain("abundo.se")
+    app.setApplicationName("ErgoTime")
 
     sys.excepthook = handle_exception
 
