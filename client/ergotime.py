@@ -83,8 +83,8 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 def main_():
     global app
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"     # Handle HIDPI
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
-    app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     
     app.setQuitOnLastWindowClosed(False)
     app.setOrganizationName("Abundo AB")
