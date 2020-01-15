@@ -1,55 +1,39 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
-'''
-GUI edit options
-'''
+"""
+GUI Window, edit report
 
-'''
-Copyright (c) 2013, Anders Lowinger, Abundo AB
-All rights reserved.
+Copyright (C) 2020 Anders Lowinger, anders@abundo.se
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-   * Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in the
-     documentation and/or other materials provided with the distribution.
-   * Neither the name of the <organization> nor the
-     names of its contributors may be used to endorse or promote products
-     derived from this software without specific prior written permission.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-'''
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 
 import datetime
 
 import PyQt5.QtCore as QtCore
 import PyQt5.QtWidgets as QtWidgets
-from PyQt5.Qt import QFont
 
 import report_win
 
 from myglobals import *
 from logger import log
-from settings import sett
 
 from common.report import Report
-#import activitymgr
-#import reportmgr
+
 
 class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
-    
+
     def __init__(self, parent=None, activityMgr=None, reportMgr=None, report=None, default_date=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -65,7 +49,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
             self.report.seq = 0
             self.report.deleted = False
             self.report.updated = False
-            self.report.modified = datetime.datetime(1990,1,1)
+            self.report.modified = datetime.datetime(1990, 1, 1)
             now = datetime.datetime.now().replace(second=0, microsecond=0).time()
             self.report.start = datetime.datetime.combine(default_date, now)
             self.report.stop = self.report.start + datetime.timedelta(seconds=30*60)
@@ -74,7 +58,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         self.btnSave.clicked.connect(self.save)
         self.btnDelete.clicked.connect(self.delete)
         self.btnCancel.clicked.connect(self.cancel)
-                
+
         # fields in grid
         self.comboActivity.currentIndexChanged.connect(self._reportDetailsChangedEvent)
         self.comboProject.currentIndexChanged.connect(self._reportDetailsChangedEvent)
@@ -90,7 +74,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         self.btnStartHourMinus.clicked.connect(self._reportDetailsModifyStart)
         self.btnStartMinutePlus.clicked.connect(self._reportDetailsModifyStart)
         self.btnStartMinuteMinus.clicked.connect(self._reportDetailsModifyStart)
-        
+
         self.btnStopHourPlus.clicked.connect(self._reportDetailsModifyStop)
         self.btnStopHourMinus.clicked.connect(self._reportDetailsModifyStop)
         self.btnStopMinutePlus.clicked.connect(self._reportDetailsModifyStop)
@@ -106,11 +90,11 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         # Copy report->gui
         s = ""
         if self.report.server_id >= 0:
-            s +="on server(%s) " % self.report.server_id
+            s += "on server(%s) " % self.report.server_id
         if self.report.updated:
-            s +="locally updated "
+            s += "locally updated "
         if self.report.deleted:
-            s +="to be deleted "
+            s += "to be deleted "
         self.lblSyncState.setText(s)
         if self.report.activityid >= 0:
             self.comboActivity.setCurrentIndex(self.comboActivity.findData(self.report.activityid))
@@ -140,7 +124,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         """
         Handle the start +H -H +S -S buttons
         """
-        sender=self.sender()
+        sender = self.sender()
         if isinstance(sender, QtWidgets.QToolButton):
             action = sender.text()
             dtstart = self.dtStart.dateTime()
@@ -160,7 +144,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         """
         Handle the stop +H -H +S -S buttons
         """
-        sender=self.sender()
+        sender = self.sender()
         if isinstance(sender, QtWidgets.QToolButton):
             action = sender.text()
             dtstop = self.dtStop.dateTime()
@@ -202,33 +186,33 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         self.report.comment = self.txtComment.toPlainText()
 
         if not self.reportMgr.store(self.report):
-            msgBox = QtWidgets.QMessageBox(parent=self)
-            msgBox.setText("Error saving report")
-            msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
-            response = msgBox.exec_()
+            msgbox = QtWidgets.QMessageBox(parent=self)
+            msgbox.setText("Error saving report")
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msgbox.setDefaultButton(QtWidgets.QMessageBox.No)
+            msgbox.exec_()
             return
-        
+
         self.accept()
 
     def delete(self):
-        msgBox = QtWidgets.QMessageBox(parent=self)
-        msgBox.setText("Do you want to delete the report?")
-        msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
-        response = msgBox.exec_()
+        msgbox = QtWidgets.QMessageBox(parent=self)
+        msgbox.setText("Do you want to delete the report?")
+        msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        msgbox.setDefaultButton(QtWidgets.QMessageBox.No)
+        response = msgbox.exec_()
 
         if response == QtWidgets.QMessageBox.Yes:
             if self.reportMgr.remove(self.report):
                 self.accept()
-    
+
     def cancel(self):
         if self._changed:
-            msgBox = QtWidgets.QMessageBox(parent=self)
-            msgBox.setText("Do you want to cancel your changes?")
-            msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
-            response = msgBox.exec_()
+            msgbox = QtWidgets.QMessageBox(parent=self)
+            msgbox.setText("Do you want to cancel your changes?")
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            msgbox.setDefaultButton(QtWidgets.QMessageBox.No)
+            response = msgbox.exec_()
 
             if response != QtWidgets.QMessageBox.Yes:
                 return
@@ -236,10 +220,8 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         self.reject()
 
 
-if __name__ == '__main__':
-    """
-    Module test
-    """
+if __name__ == "__main__":
+    # Module test
     app = createQApplication()
 
     tmp_default_date = datetime.datetime.now().date()

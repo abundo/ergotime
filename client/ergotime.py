@@ -1,56 +1,41 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
-'''
+"""
 Application startup
-'''
 
-'''
-Copyright (c) 2013, Anders Lowinger, Abundo AB
-All rights reserved.
+Copyright (C) 2020 Anders Lowinger, anders@abundo.se
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-   * Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in the
-     documentation and/or other materials provided with the distribution.
-   * Neither the name of the <organization> nor the
-     names of its contributors may be used to endorse or promote products
-     derived from this software without specific prior written permission.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-'''
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 
 import os
 import os.path
-import builtins
-
-from myglobals import *
 
 import sys
 import traceback
-import encodings.idna   # make sure cxfreeze includes the module
 
 import PyQt5.QtCore as QtCore
-import PyQt5.QtGui as QtGui
 import PyQt5.QtWidgets as QtWidgets
+
+from myglobals import *
 
 import main
 
 
 old_stdout = sys.stdout
 old_stderr = sys.stderr
+app = None
 
 
 def handle_exception(exc_type, exc_value, exc_traceback):
@@ -64,28 +49,31 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         if app:
             app.quit()
 
-    filename, line, dummy, dummy = traceback.extract_tb(exc_traceback).pop()
+    filename, line, dummy1, dummy2 = traceback.extract_tb(exc_traceback).pop()
     filename = os.path.basename(filename)
-    error    = "%s: %s" % (exc_type.__name__, exc_value)
+    error = "%s: %s" % (exc_type.__name__, exc_value)
 
-    QtWidgets.QMessageBox.critical(None,"Error",
+    QtWidgets.QMessageBox.critical(
+        None, "Error",
         "<html>A critical error has occured.<br/> "
         + "<b>%s</b><br/><br/>" % error
         + "It occurred at <b>line %d</b> of file <b>%s</b>.<br/>" % (line, filename)
-        + "</html>")
+        + "</html>"
+    )
 
     print("Closed due to an error. This is the full error report:")
     print()
     print("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
     sys.exit(1)
-  
+
 
 def main_():
-    global app
+    # global app
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"     # Handle HIDPI
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    QtWidgets.QApplication.setStyle("Fusion")
     app = QtWidgets.QApplication(sys.argv)
-    
+
     app.setQuitOnLastWindowClosed(False)
     app.setOrganizationName("Abundo AB")
     app.setOrganizationDomain("abundo.se")
@@ -96,12 +84,13 @@ def main_():
     w_main = main.MainWin()
     try:
         w_main.show()
-        sys.exit( app.exec_() )
-    except Exception as e:
+        sys.exit(app.exec_())
+    except Exception as err:
         # Restore stdout/stderr so we can see the error
         sys.stdout = old_stdout
         sys.stderr = old_stderr
-        print("Error: %s" % e)
+        print("Error: %s" % err)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main_()

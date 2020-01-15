@@ -1,36 +1,23 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
-'''
+"""
 Manage activities
-'''
 
-'''
-Copyright (c) 2013, Anders Lowinger, Abundo AB
-All rights reserved.
+Copyright (C) 2020 Anders Lowinger, anders@abundo.se
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-   * Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in the
-     documentation and/or other materials provided with the distribution.
-   * Neither the name of the <organization> nor the
-     names of its contributors may be used to endorse or promote products
-     derived from this software without specific prior written permission.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-'''
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 
 import queue
 import threading
@@ -50,13 +37,13 @@ import lib.network as network
 
 class ActivityMgr(QtCore.QObject):
     sig = QtCore.pyqtSignal()
-    
+
     def __init__(self, localdb=None):
         super().__init__()
         self.localdb = localdb
 
         self.periodicsync_timer = None
-                
+
         self.activities = []
         self.activities_id = {}
         self.toThreadQ = queue.Queue()
@@ -102,9 +89,11 @@ class ActivityMgr(QtCore.QObject):
         log.debug("ActivityMgr.periodic_sync triggered")
         self.sync()
         self._start_periodicsync_timer()
-        
+
     def init(self):
-        """Load the list of activities from local db"""
+        """
+        Load the list of activities from local db
+        """
         self._loadList()
         self.sig.emit()
 
@@ -115,7 +104,7 @@ class ActivityMgr(QtCore.QObject):
 
     def getList(self):
         return self.activities
-   
+
     def save(self):
         log.debugf(DEBUG_ACTIVITYMGR, "Saving activities")
         for activity in self.activities:
@@ -124,17 +113,16 @@ class ActivityMgr(QtCore.QObject):
                 self.localdb.update("activity", d=activity, primary_key="_id")
             except db.DbException as err:
                 log.error("Cant save activity in local database, %s" % err)
-        
+
     def _loadList(self):
         sql = "SELECT * FROM activity ORDER BY active desc,name"
         activities = self.localdb.select_all(sql)
-        
+
         self.activities.clear()
         self.activities_id.clear()
         for activity in activities:
             self.activities.append(activity)
             self.activities_id[activity.server_id] = activity
-        return
 
     def sync(self):
         """
@@ -147,7 +135,6 @@ class ActivityMgr(QtCore.QObject):
             self.periodicsync_timer.cancel()
         self.toThreadQ.put("quit")
 
-
     ##############################################################################
     #
     # Everything below is running in a different thread
@@ -158,29 +145,29 @@ class ActivityMgr(QtCore.QObject):
         """
         Runs as a separate thread
         """
-        
+
         # Get list of all activities on server
         try:
             srv_activities, tmp = network.request("GET", "%s/api/activity" % sett.server_url, decode=True)
         except network.NetworkException as err:
             log.error("Cannot load list of activities from server %s" % err)
             return
-#        print("srvactivities", srvactivities)
-        
+
         for srv_activity in srv_activities:
             srv_activity = AttrDict(srv_activity)
             log.debug("Server activity %s" % srv_activity)
-             
+
             sql = "SELECT * FROM activity WHERE server_id=?"
-            local_activity = self.localdb.select_one(sql, (srv_activity["_id"],) )
+            local_activity = self.localdb.select_one(sql, (srv_activity["_id"],))
             if local_activity:
                 # we have the activity locally, check if changed
                 changes = []
-                for attr in ['name', "description", "active"]:
+                for attr in ["name", "description", "active"]:
                     if getattr(local_activity, attr) != getattr(srv_activity, attr):
                         changes.append(attr)
-                if len(changes):
-                    log.debugf(DEBUG_ACTIVITYMGR, "Updating local copy of activity, changed columns %s,  %s" % (changes, str(srv_activity).replace("\n", " ")))
+                if changes:
+                    log.debugf(DEBUG_ACTIVITYMGR, "Updating local copy of activity, changed columns %s,  %s" %
+                               (changes, str(srv_activity).replace("\n", " ")))
                     local_activity.name = srv_activity["name"]
                     local_activity.server_id = srv_activity["_id"]
                     local_activity.active = srv_activity["active"]
@@ -191,7 +178,8 @@ class ActivityMgr(QtCore.QObject):
                         return
             else:
                 # new activity
-                log.debugf(DEBUG_ACTIVITYMGR, "New activity '%s' on server, saving in local database" % srv_activity.name)
+                log.debugf(DEBUG_ACTIVITYMGR, "New activity '%s' on server, saving in local database" %
+                           srv_activity.name)
                 srv_activity.server_id = srv_activity._id
                 srv_activity._id = -1
                 try:
@@ -202,14 +190,13 @@ class ActivityMgr(QtCore.QObject):
 
         self._loadList()
         self.sig.emit()
-    
-    
+
     def run(self):
         """
         Runs as a separate thread
         """
         log.debugf(DEBUG_ACTIVITYMGR, "Starting activitymgr thread")
-        
+
         while True:
             req = self.toThreadQ.get()
             log.debugf(DEBUG_ACTIVITYMGR, "activitymgr, request=%s" % req)
@@ -217,25 +204,23 @@ class ActivityMgr(QtCore.QObject):
                 log.debugf(DEBUG_ACTIVITYMGR, "activitymgr thread stopping")
                 return
             elif req == "sync":
-                
-                # connect to database, we have a separate connection in this thread to 
+                # connect to database, we have a separate connection in this thread to
                 # simplify database operations
                 self.localdb = util.openLocalDatabase2()
-
                 self._do_sync()
             else:
                 log.error("activitymgr thread, unknown command %s" % req)
 
 
-if __name__ == '__main__':
-    """Unit test"""
+if __name__ == "__main__":
+    # Module test
     import time
     from PyQt5.Qt import QApplication
-    
+
     app = createQApplication()
 
     localdb = util.openLocalDatabase2(":memory:")
-    
+
     activityMgr = ActivityMgr(localdb=localdb)
     activityMgr.init()
     activityMgr.sync()

@@ -1,9 +1,11 @@
-rem set TARGETDIR=c:\opt\ergotime2-pyqt
+@echo off
+rem
+rem Build a windows release, using the cxfreeze tool
+rem
 
-set PYTHON=c:\opt\python36
-rem set CXFREEZE=%PYTHON%\scripts\cxfreeze
+set PYTHON=c:\python37
 
-%PYTHON%\python build_release.py build
+%PYTHON%\python build_cxfreeze_release.py build
 
 mkdir build\exe.win-amd64-3.6\resource
 xcopy resource build\exe.win-amd64-3.6\resource /s /y

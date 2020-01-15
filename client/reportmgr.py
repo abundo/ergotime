@@ -1,36 +1,23 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
-'''
+"""
 Manage reports
-'''
 
-'''
-Copyright (c) 2013, Anders Lowinger, Abundo AB
-All rights reserved.
+Copyright (C) 2020 Anders Lowinger, anders@abundo.se
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-   * Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in the
-     documentation and/or other materials provided with the distribution.
-   * Neither the name of the <organization> nor the
-     names of its contributors may be used to endorse or promote products
-     derived from this software without specific prior written permission.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-'''
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 
 import datetime
 import queue
@@ -47,9 +34,10 @@ import util
 import lib.db as db
 import lib.network as network
 
+
 class ReportMgr(QtCore.QObject):
     sig = QtCore.pyqtSignal()
-    
+
     def __init__(self, localdb=None):
         super().__init__()
         self.localdb = localdb
@@ -62,7 +50,7 @@ class ReportMgr(QtCore.QObject):
         self.t.setName("ReportMgr")
         self.t.daemon = True
         self.t.start()
-        
+
         sett.updated.connect(self.handle_settings)
         self.handle_settings()
 
@@ -89,7 +77,7 @@ class ReportMgr(QtCore.QObject):
         jitter = sett.report_sync_interval // 10    # 10% jitter
         if jitter < 1:
             jitter = 1
-        interval = sett.report_sync_interval + random.randint(-jitter, jitter) 
+        interval = sett.report_sync_interval + random.randint(-jitter, jitter)
         log.debug("ReportMgr interval %s jitter %s" % (interval, jitter))
         self.periodicsync_timer = threading.Timer(interval, self.periodic_sync)
         self.periodicsync_timer.setName("ReportMgr.Timer")
@@ -102,7 +90,9 @@ class ReportMgr(QtCore.QObject):
         self._start_periodicsync_timer()
 
     def init(self):
-        """Load the list of reports from local db"""
+        """
+        Load the list of reports from local db
+        """
         self.sig.emit()
 
     def get(self, _id):
@@ -112,7 +102,7 @@ class ReportMgr(QtCore.QObject):
         try:
             sql = "SELECT * FROM report WHERE _id=?"
             report = self.localdb.select_one(sql, (_id,))
-        except db.DbException as err: 
+        except db.DbException as err:
             log.error("Cant load report with _id %s from local database %s" % (_id, err))
             return None
         return report
@@ -134,11 +124,10 @@ class ReportMgr(QtCore.QObject):
         """
         Count number of reports in local database that is not syncronised with server
         """
-        # todo, use count(*)
         sql = "SELECT count(*) FROM report WHERE server_id < 0"
-        unsync_reports_count = self.localdb.count(sql) 
+        unsync_reports_count = self.localdb.count(sql)
         return unsync_reports_count
-    
+
     def store(self, report):
         try:
             if report._id < 0:
@@ -159,7 +148,7 @@ class ReportMgr(QtCore.QObject):
         """
         ret = False
         try:
-            if report.server_id != None and report.server_id >= 0:
+            if report.server_id is not None and report.server_id >= 0:
                 # Report exist on server, mark for removal - next sync will remove the row
                 report.deleted = 1
                 self.localdb.update("report", d=report, primary_key="_id")
@@ -181,14 +170,15 @@ class ReportMgr(QtCore.QObject):
             self.sync()
 
     def sync(self):
-        """Sync the local database with the one on the server"""
-        self.toThreadQ.put( ["sync"] )
+        """
+        Sync the local database with the one on the server
+        """
+        self.toThreadQ.put(["sync"])
 
     def stop(self):
         if self.periodicsync_timer and self.periodicsync_timer.is_alive():
             self.periodicsync_timer.cancel()
-        self.toThreadQ.put( ["quit"] )
-
+        self.toThreadQ.put(["quit"])
 
 ##############################################################################
 #
@@ -196,12 +186,11 @@ class ReportMgr(QtCore.QObject):
 #
 ##############################################################################
 
-
     def _do_sync(self):
         """
 Sync the database on the server and local database, for a specific date
 
-psql has a trigger, if a report is inserted or updated the column 'seq' is
+psql has a trigger, if a report is inserted or updated the column "seq" is
 updated from a sequence. It is then easy to find out what has changed
 after last sync
 
@@ -211,10 +200,10 @@ the trigger is configured like this
     create or replace function update_modified_seq()
     returns trigger as $$
     begin
-       new.seq = nextval('report_seq');
+       new.seq = nextval("report_seq");
        return new;
     end;
-    $$ language 'plpgsql';
+    $$ language "plpgsql";
 
     update report set seq = 0 where seq is null;
     create trigger insert_customer_seq before insert on report for each row execute procedure update_modified_seq();
@@ -224,7 +213,7 @@ the trigger is configured like this
 
  1. Send delete request to server for reports being marked for deletion
     if failure -> stop, otherwise delete flag will be lost further down by the sync
-    
+
  2. Send new reports to server
     if failure -> stop, otherwise the entries will be removed further down by the sync
 
@@ -253,11 +242,11 @@ the trigger is configured like this
             return
         for report in data:
             log.debugf(DEBUG_REPORTMGR, "  Delete report on server %s" % report)
-            
+
             report._id = report.server_id   # use server _id
             report.updated = 0
             try:
-                url = url="%s/%s" % (reportapi, report._id)
+                url = "%s/%s" % (reportapi, report._id)
                 network.request("PUT", url=url, data=report, decode=True)
             except network.NetworkException as err:
                 log.error("  Can't update report on server %s" % err)
@@ -275,7 +264,7 @@ the trigger is configured like this
             _id = local_report._id
             local_report._id = -1
             try:
-                url=reportapi
+                url = reportapi
                 srv_data, tmp = network.request("POST", url=url, data=local_report, decode=True)
             except network.NetworkException as err:
                 log.error("  Can't send new report to server %s" % err)
@@ -287,9 +276,9 @@ the trigger is configured like this
             except db.DbException as err:
                 log.error("  Can't update report in local database" % err)
                 return
-            
+
         # todo: load report from server to see if it is changed first
-        
+
         log.debugf(DEBUG_REPORTMGR, "Sync() Send updated reports To server")
         try:
             sql = "SELECT * FROM report WHERE updated != 0 AND updated IS NOT NULL"
@@ -311,7 +300,6 @@ the trigger is configured like this
             except db.DbException as err:
                 log.error("  Error storing updated report in local database %s" % err)
                 return
-
 
         log.debugf(DEBUG_REPORTMGR, "Sync() Get new/updated reports from server")
 
@@ -336,7 +324,7 @@ the trigger is configured like this
         while True and not error:
             try:
                 url = "%s/sync/%s" % (reportapi, local_max_seq)  # todo, maxage from settings
-                param = { "limit": step, "offset": offset, "maxage": 180 }
+                param = {"limit": step, "offset": offset, "maxage": 18}
                 srv_reports, tmp = network.request("GET", url=url, param=param, decode=True)
             except network.NetworkException as err:
                 log.error("  Can't get new/updated reports from server, %s" % err)
@@ -350,7 +338,7 @@ the trigger is configured like this
                 # check if we have the report locally
                 try:
                     sql = "SELECT * FROM report WHERE server_id=?"
-                    local_data = self.thread_db.select_one( sql, (srv_report._id,) )
+                    local_data = self.thread_db.select_one(sql, (srv_report._id,))
                 except db.DbException as err:
                     log.error("  Can't load report from local database %s" % err)
                     error = True
@@ -360,20 +348,20 @@ the trigger is configured like this
                 if local_data:
                     # we already have report in local database
                     local_report = local_data
-                    
+
                     if srv_report.deleted:
                         # report is marked as deleted on server, remove locally
                         log.debugf(DEBUG_REPORTMGR, "  From server, report with _id %s is deleted" % srv_report._id)
                         try:
                             sql = "DELETE FROM report WHERE _id=?"
-                            deleted_count = self.thread_db.delete(sql, (local_report._id,) )
+                            deleted_count = self.thread_db.delete(sql, (local_report._id,))
                         except db.DbException as err:
                             log.error("  Can't delete report from local database %s" % err)
                             error = True
                             break
                         if deleted_count < 1:
                             log.error("  Can't delete report from local database")
-                            
+
                     else:
                         # report is updated on server, replace local copy with server report
                         log.debugf(DEBUG_REPORTMGR, "  From server, report with _id %s is updated" % srv_report._id)
@@ -403,7 +391,6 @@ the trigger is configured like this
 
             offset += step
 
-
         if setMaxLocalSeq > local_max_seq:
             # just get any report from local database, and set seq
             try:
@@ -429,7 +416,7 @@ the trigger is configured like this
         # to simplify database operations
         log.debugf(DEBUG_REPORTMGR, "Opening local database")
         self.thread_db = util.openLocalDatabase2()
-        
+
         while True:
             req = self.toThreadQ.get()
             log.debugf(DEBUG_REPORTMGR, "reportmgr, request=%s" % req)
@@ -445,19 +432,17 @@ the trigger is configured like this
                 log.error(DEBUG_REPORTMGR, "reportmgr thread, unknown command %s" % req[0])
 
 
-if __name__ == '__main__':
-    """
-    Unit test
-    """
+if __name__ == "__main__":
+    # Module test
     import time
     import logging
     from PyQt5.Qt import QApplication
-    
+
     log.setLevel(logging.DEBUG)
     app = createQApplication()
 
     localdb = util.openLocalDatabase2(":memory:")
-    
+
     reportMgr = ReportMgr(localdb=localdb)
     reportMgr.init()
     reportMgr.sync()

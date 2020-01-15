@@ -1,43 +1,30 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
-'''
+"""
 GUI Main window
-'''
 
-'''
-Copyright (c) 2013, Anders Lowinger, Abundo AB
-All rights reserved.
+Copyright (C) 2020 Anders Lowinger, anders@abundo.se
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-   * Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in the
-     documentation and/or other materials provided with the distribution.
-   * Neither the name of the <organization> nor the
-     names of its contributors may be used to endorse or promote products
-     derived from this software without specific prior written permission.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-'''
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 
 import sys
 import datetime
-import enum
 
 import PyQt5.QtCore as QtCore
 import PyQt5.QtGui as QtGui
+import PyQt5.QtWidgets as QtWidgets
 from PyQt5.Qt import QFont, QGuiApplication
 
 import util
@@ -65,14 +52,14 @@ class MyStatusBar:
     @property
     def idle(self):
         return self.lblStatusIdle.text()
-        
+
     @idle.setter
     def idle(self, value):
         self.lblStatusIdle.setText(value)
 
 
 class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -92,16 +79,15 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         sys.stdout = log
         sys.stderr = log
         print("STDOUT/STDERR Redirected to log")
-        
+
         self.color_white = self.dtCurrentStart.palette()
         self.color_white.setColor(QtGui.QPalette.All, QtGui.QPalette.Base, QtGui.QColor(QtCore.Qt.white))
-        
+
         self.color_yellow = self.dtCurrentStart.palette()
         self.color_yellow.setColor(QtGui.QPalette.All, QtGui.QPalette.Base, QtGui.QColor(QtCore.Qt.yellow))
         self.color_yellow.setColor(QtGui.QPalette.Text, QtCore.Qt.black)
 
-        QtCore.QTimer.singleShot(10, self.delayInit) # make sure GUI is drawn before we do anything more
-
+        QtCore.QTimer.singleShot(10, self.delayInit)   # make sure GUI is drawn before we do anything more
 
     # ########################################################################
     #
@@ -111,7 +97,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
 
     def delayInit(self):
         """
-        This is called from event loop, so GUI is fully initialized
+        This is called from event loop, when GUI is fully initialized
         """
 
         self.localdb = util.openLocalDatabase2()
@@ -134,25 +120,25 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.timetracker.init()
 
         self._ReportsSetSelectedDateToday()
-        
+
         self.actionSave_windows_position.triggered.connect(self._saveWindowPosition)
         sett.updated.connect(self.settingsUpdated)
 
     def settingsDialog(self):
-        o = options.OptionsWin(self)
-        o.exec_()
-        
+        options1 = options.OptionsWin(self)
+        options1.exec_()
+
     def about(self):
         import about
-        a = about.AboutWin(self)
-        a.exec_()
-        
+        about = about.AboutWin(self)
+        about.exec_()
+
     def closeEvent(self, event):
         if self._closeHandler():
             event.accept()
         else:
             event.ignore()
-        
+
     def _closeHandler(self):
         msgBox = QtWidgets.QMessageBox(parent=self)
 
@@ -164,7 +150,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             response = msgBox.exec_()
             if response != QtWidgets.QMessageBox.Yes:
                 self.timetracker.setStateInactive()
-                
+
         if not runFromIde:
             # do we have unsyncronised local changes?
             count = self.reportmgr.getUnsyncronisedCount()
@@ -176,23 +162,27 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
                 if response != QtWidgets.QMessageBox.Yes:
                     self.reportmgr.sync()
                     # todo, wait for sync done
-            
+
         self._saveWindowPosition()
         self.activitymgr.stop()
         self.reportmgr.stop()
-        
+
         sett.sync()
         QtWidgets.QApplication.exit(0)
-    
-    # save the current windows position & size in settings
+
     def _saveWindowPosition(self):
+        """
+        save the current windows position & size in settings
+        """
         log.debugf(DEBUG_MAINWIN, "Save main window position and size")
         sett.main_win_pos = self.pos()
         sett.main_win_size = self.size()
         sett.main_win_splitter_1 = self.splitter_1.saveState()
 
-    # restore the windows current position & size from settings
     def _restoreWindowPosition(self):
+        """
+        restore the windows current position & size from settings
+        """
         log.debugf(DEBUG_MAINWIN, "Restore main window position and size")
         self.move(sett.main_win_pos)
         self.resize(sett.main_win_size)
@@ -203,27 +193,26 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             widget.setPalette(self.color_yellow)
         else:
             widget.setPalette(self.color_white)
-        
+
     def settingsUpdated(self):
         log.debugf(DEBUG_MAINWIN, "settingsUpdated")
         font = QFont(sett.fontName, int(sett.fontSize))
         self.setFont(font)
         QGuiApplication.setFont(font)
-        
 
     # ########################################################################
     #
     #   Menu
     #
     # ########################################################################
-    
+
     def _initMenu(self):
         # File, Exit
         self.actionExit.triggered.connect(self._closeHandler)
 
         # Edit, Settings
         self.actionSettings.triggered.connect(self.settingsDialog)
-                
+
         # Activity, Sync
         self.actionActivitySync.triggered.connect(self.activitymgr.sync)
 
@@ -233,17 +222,16 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         # Help, about
         self.actionAbout.triggered.connect(self.about)
 
-
     # ########################################################################
     #
     #   Log
     #
     # ########################################################################
-    
+
     def _initLog(self):
         self.txtLog.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.txtLog.customContextMenuRequested.connect(self.handleLogMenu)
-        
+
     def handleLogMenu(self, pos):
         menu = QtWidgets.QMenu(self)
         clearAction = menu.addAction("Clear")
@@ -251,7 +239,6 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         if action == clearAction:
             self.txtLog.clear()
             log.debugf(DEBUG_MAINWIN, "Log cleared()")
-
 
     # ########################################################################
     #
@@ -270,11 +257,10 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         log.debugf(DEBUG_MAINWIN, "main/activityListUpdated()")
         alist = self.activitymgr.getList()
         self.comboCurrentActivity.clear()
-        for a in alist:
-            self.comboCurrentActivity.addItem(a.name, a.server_id)
+        for activity in alist:
+            self.comboCurrentActivity.addItem(activity.name, activity.server_id)
         self._reportsTableUpdated()
 
-    
     # ########################################################################
     #
     #   Current report
@@ -301,7 +287,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.report = self._getNewReport()
         self.report.start = datetime.datetime.now().replace(second=0, microsecond=0)
         self.report.stop = self.report.start
-        
+
         self.timetracker.setStateActive(report=self.report)
         self._currentReportGuiChanged()
 
@@ -314,7 +300,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         """
         self.timeCurrentLen.setTime(status.length)
         self._myStatusBar.idle = "Idle %s" % status.idle
-        
+
     def _currentReportStateChanged(self, state):
         """
         Called when timetracker state changes
@@ -322,7 +308,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         icon = "tray-inactive.png"
         widgets = [self.dtCurrentStart, self.timeCurrentLen, self.txtCurrentComment]
         if state == self.timetracker.stateActive:
-            self.dtCurrentStart.setDateTime( QtCore.QDateTime.currentDateTime() )
+            self.dtCurrentStart.setDateTime(QtCore.QDateTime.currentDateTime())
             icon = "tray-active.png"
             for widget in widgets:
                 widget.setEnabled(True)
@@ -344,25 +330,25 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         """
         Copy GUI to self.report
         """
-        
+
         if self.report:
             tmpid = self.comboCurrentActivity.itemData(self.comboCurrentActivity.currentIndex())
-            if tmpid != None and tmpid > 0:
+            if tmpid is not None and tmpid > 0:
                 self.report.activityid = tmpid
-    
+
             tmpid = self.comboCurrentProject.itemData(self.comboCurrentProject.currentIndex())
-            if tmpid != None and tmpid > 0:
+            if tmpid is not None and tmpid > 0:
                 self.report.projectid = tmpid
-    
+
             self.report.start = self.dtCurrentStart.dateTime().toPyDateTime().replace(microsecond=0)
-    
+
             # calculate new start, end is always now()
-            t = self.timeCurrentLen.time()
-            seconds = t.hour() * 3600 + t.minute() * 60 + t.second()
-            start = datetime.datetime.now() - datetime.timedelta( seconds=seconds ) 
-    
+            # t = self.timeCurrentLen.time()
+            # seconds = t.hour() * 3600 + t.minute() * 60 + t.second()
+            # start = datetime.datetime.now() - datetime.timedelta(seconds=seconds)
+
             self.report.comment = self.txtCurrentComment.toPlainText()
-            
+
             self.timetracker.report = self.report
 
     # ########################################################################
@@ -375,11 +361,11 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         # Toolbar
         self.btnReportSync.clicked.connect(self.reportmgr.sync)
         self.chkReportSyncAuto.stateChanged.connect(self.reportmgr.setAutosync)
-        
+
         self.btnSetSelectedDatePrev.clicked.connect(self._ReportsSetSelectedDatePrev)
         self.btnSetSelectedDateToday.clicked.connect(self._ReportsSetSelectedDateToday)
         self.btnSetSelectedDateNext.clicked.connect(self._ReportsSetSelectedDateNext)
-        
+
         self.selectedDate.dateChanged.connect(self._ReportsUpdateWeekday)
 
         # Table
@@ -390,12 +376,12 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         t.setHorizontalHeaderLabels(("Activity", "Project", "Start", "Stop", "Len", "Flags", "Comment"))
         t.verticalHeader().setVisible(False)
         t.clicked.connect(self.report_edit)
-        
+
         self.reportmgr.sig.connect(self._reportsTableUpdated)
 
     def _reportsTableSet(self, table, row, col, value, userdata=None):
         table_item = QtWidgets.QTableWidgetItem(value)
-        if userdata != None:
+        if userdata is not None:
             table_item.setData(QtCore.Qt.UserRole, userdata)
         table.setItem(row, col, table_item)
 
@@ -406,7 +392,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         if not self.reportmgr:
             return  # not initialized yet
         d = self.selectedDate.date().toPyDate()
-        self.rlist = self.reportmgr.getList( d )
+        self.rlist = self.reportmgr.getList(d)
         t = self.tableReports   # less typing
         t.clearSelection()
         t.setRowCount(len(self.rlist) + 1)
@@ -414,9 +400,9 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         totalLen = 0
         for r in self.rlist:
             col = 0
-            
+
             a = self.activitymgr.get(r.activityid)
-            if a != None:
+            if a is not None:
                 self._reportsTableSet(t, row, col, a.name, r._id)
             else:
                 self._reportsTableSet(t, row, col, "Unknown", r._id)
@@ -429,18 +415,18 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             try:
                 tmp = r.start.strftime("%H:%M")
             except AttributeError:
-                tmp = "None"                
-            self._reportsTableSet(t, row, col, tmp)
-            col += 1
-            
-            try:
-                tmp = r.stop.strftime("%H:%M")
-            except AttributeError:
-                tmp = "None"                
+                tmp = "None"
             self._reportsTableSet(t, row, col, tmp)
             col += 1
 
-            if r.start != None and r.stop != None:
+            try:
+                tmp = r.stop.strftime("%H:%M")
+            except AttributeError:
+                tmp = "None"
+            self._reportsTableSet(t, row, col, tmp)
+            col += 1
+
+            if r.start is not None and r.stop is not None:
                 l = (r.stop - r.start).total_seconds() / 60
                 totalLen += l
                 tmp = "%02d:%02d" % (l // 60, l % 60)
@@ -450,7 +436,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             col += 1
 
             s = ""
-            if r.server_id != None and r.server_id > -1: 
+            if r.server_id is not None and r.server_id > -1:
                 s += "on server(%s)" % r.server_id
             if r.updated:
                 s += " updated"
@@ -463,61 +449,65 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             col += 1
 
             row += 1
-       
+
         col = 0
-        
+
         self._reportsTableSet(t, row, col, "Total")
         col += 1
-        
+
         self._reportsTableSet(t, row, col, "")
         col += 1
-        
+
         self._reportsTableSet(t, row, col, "")
         col += 1
-        
+
         self._reportsTableSet(t, row, col, "")
         col += 1
-        
+
         self._reportsTableSet(t, row, col, "%02d:%02d" % (totalLen // 60, totalLen % 60))
         col += 1
-        
+
         self._reportsTableSet(t, row, col, "")
         col += 1
-        
+
         self._reportsTableSet(t, row, col, "")
         col += 1
 
         t.resizeColumnsToContents()
-            
+
     def _ReportsSetCurrentDate(self, d):
-        """Helper fiunction to update date"""
-        self.selectedDate.setDate( d )
- 
+        """
+        Helper fiunction to update date
+        """
+        self.selectedDate.setDate(d)
+
     def _ReportsSetSelectedDateToday(self):
-        self._ReportsSetCurrentDate( datetime.datetime.now() )
+        self._ReportsSetCurrentDate(datetime.datetime.now())
 
     def _ReportsSetSelectedDatePrev(self):
         d = self.selectedDate.date().addDays(-1)
-        self._ReportsSetCurrentDate( d )
-        
+        self._ReportsSetCurrentDate(d)
+
     def _ReportsSetSelectedDateNext(self):
         d = self.selectedDate.date().addDays(1)
-        self._ReportsSetCurrentDate( d )
-        
+        self._ReportsSetCurrentDate(d)
+
     def _ReportsUpdateWeekday(self, qd):
-        """Called by signal, so it is always updated"""    
+        """
+        Called by signal, so it is always updated
+        """
         dayname = QtCore.QDate.longDayName(qd.dayOfWeek())
-        self.reportsWeekday.setText( dayname )
+        self.reportsWeekday.setText(dayname)
         self.tableReports.clearSelection()
         self._reportsTableUpdated()
 
     def _ReportsGetSelectedReportId(self):
         row = self.tableReports.currentRow()
-        if row != None:
+        if row:
             _id = self.tableReports.item(row, 0).data(QtCore.Qt.UserRole)
             return _id
         return None
-        
+
     def _getNewReport(self):
         report = Report()
         report.server_id = -1
@@ -525,7 +515,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         report.seq = 0
         report.deleted = False
         report.updated = False
-        report.modified = datetime.datetime(1990,1,1)
+        report.modified = datetime.datetime(1990, 1, 1)
         return report
 
     # ########################################################################
@@ -543,9 +533,9 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         Open the report detail window, with default values for creating a new report
         """
         d = self.selectedDate.date().toPyDate()
-        a = report_main.Report_Win(self, 
-                                   activityMgr = self.activitymgr,
-                                   reportMgr = self.reportmgr,
+        a = report_main.Report_Win(self,
+                                   activityMgr=self.activitymgr,
+                                   reportMgr=self.reportmgr,
                                    default_date=d)
         a.exec_()
 
@@ -558,13 +548,13 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         row = self.tableReports.item(row, 0)
         if row:
             _id = row.data(QtCore.Qt.UserRole)
-            if _id != None and _id >= 0:
+            if _id is not None and _id >= 0:
                 report = self.reportmgr.get(_id)
                 if report:
-                    a = report_main.Report_Win(self, 
-                                            activityMgr = self.activitymgr,
-                                            reportMgr = self.reportmgr,
-                                            report=report)
+                    a = report_main.Report_Win(self,
+                                               activityMgr=self.activitymgr,
+                                               reportMgr=self.reportmgr,
+                                               report=report)
                     a.exec_()
                     return
                 log.error("Can't find report %s in local database" % _id)

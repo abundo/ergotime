@@ -2,8 +2,22 @@
 
 """
 Database management
-"""
 
+Copyright (C) 2020 Anders Lowinger, anders@abundo.se
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 
 from orderedattrdict import AttrDict
 
@@ -15,7 +29,7 @@ class DbException(Exception):
 class Database:
     """
     Handle database connections
-    
+
     Keep the connection open, and if any error try to reconnect
     before returning any errors
     """
@@ -25,18 +39,17 @@ class Database:
             self.driver = self.db_conf["driver"]
         else:
             self.driver = driver
-        
+
         self.conn = None
         self.cursor = None
         self.dbexception = DbException
 
-        if not self.driver in ["psql", "mysql", "sqlite"]: 
+        if self.driver not in ["psql", "mysql", "sqlite"]:
             raise ValueError("Driver type '%s' not implemented" % self.driver)
-        
+
         self.valueholder = "%s"
         if self.driver == "sqlite":
             self.valueholder = "?"
-            
 
     def connect(self):
         if self.conn:
@@ -46,40 +59,42 @@ class Database:
             import psycopg2
             import psycopg2.extras
             self.dbexception = psycopg2.Error
-            
+
             self.conn = psycopg2.connect(
-                    host=self.db_conf['host'], 
-                    user=self.db_conf['user'], 
-                    password=self.db_conf['pass'],
-                    database=self.db_conf['name'])
+                host=self.db_conf["host"],
+                user=self.db_conf["user"],
+                password=self.db_conf["pass"],
+                database=self.db_conf["name"])
             self.conn.autocommit = False
-            self.cursor = self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) # return querys as dictionaries
-            
+
+            # return querys as dictionaries
+            self.cursor = self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
         elif self.driver == "mysql":
             import pymysql
             import pymysql.cursors
             self.dbexception = pymysql.MySQLError
-            
+
             self.conn = pymysql.connect(
-                    host=self.db_conf['host'], 
-                    user=self.db_conf['user'], 
-                    passwd=self.db_conf['pass'],
-                    db=self.db_conf['name'],
-                    cursorclass=pymysql.cursors.DictCursor)
+                host=self.db_conf["host"],
+                user=self.db_conf["user"],
+                passwd=self.db_conf["pass"],
+                db=self.db_conf["name"],
+                cursorclass=pymysql.cursors.DictCursor)
             self.cursor = self.conn.cursor()
 
         elif self.driver == "sqlite":
             import sqlite3
             self.dbexception = sqlite3.Error
-            
-            self.conn = sqlite3.connect(self.db_conf["name"], 
-                                        check_same_thread=False, 
+
+            self.conn = sqlite3.connect(self.db_conf["name"],
+                                        check_same_thread=False,
                                         detect_types=sqlite3.PARSE_DECLTYPES)
             self.conn.row_factory = sqlite3.Row   # return querys as dictionaries
             self.cursor = self.conn.cursor()
 
         return self.conn
-    
+
     def disconnect(self):
         if self.cursor:
             self.cursor.close()
@@ -87,25 +102,25 @@ class Database:
         if self.conn:
             self.conn.close()
         self.conn = None
-    
+
     def begin(self):
         for i in range(0, 2):
             self.connect()
             try:
                 self.conn.begin()
                 return
-            except self.dbexception as e:
+            except self.dbexception as err:
                 if i == 1:
-                    raise DbException(str(e))
+                    raise DbException(str(err))
             self.disconnect()
-        
+
     def commit(self):
         """
         We don't retry commit, if the connection is gone there are
         no transaction to commit
         """
         self.conn.commit()
-    
+
     def rollback(self):
         """
         We don't retry rollback, if the connection is gone there are
@@ -127,20 +142,20 @@ class Database:
                 else:
                     self.cursor.execute(sql)
                 return
-            except self.dbexception as e:
+            except self.dbexception as err:
                 if i < 2:
-                    raise DbException(str(e))
+                    raise DbException(str(err))
                 self.disconnect()
-    
+
     def last_insert_id(self):
         key = "LAST_INSERT_ID()"
         rows = self.execute(key)
-        if len(rows):
+        if rows:
             row = rows[0]
             if key in row:
                 return row[key]
         return None
-    
+
     def count(self, sql, values=None, commit=True):
         self.execute(sql, values)
         row = self.cursor.fetchone()
@@ -148,19 +163,21 @@ class Database:
             self.commit()
         if row:
             if self.driver == "mysql":
-                return row['count(*)']
+                return row["count(*)"]
             elif self.driver == "psql":
-                return row['count']
+                return row["count"]
             elif self.driver == "sqlite":
                 return row[0]
         return None
 
-    def insert(self, table=None, d=None, primary_key="_id", exclude=[], commit=True):
+    def insert(self, table=None, d=None, primary_key="_id", exclude=None, commit=True):
         """
         Insert a row in a table, using table name and a dict
         Primary is the key, which should be updated with last_inserted_id
         exclude are columns that should be ignored
         """
+        if exclude is None:
+            exclude = []
         exclude.append(primary_key)  # we always exclude the primary_key
         columns = []
         values = []
@@ -168,12 +185,12 @@ class Database:
             columns.append(colname)
             values.append(d[colname])
         sql = "INSERT into %s (%s) VALUES (%s)" %\
-            (table, 
-             ",".join(columns), 
-             ",".join([self.valueholder] * len(values) ) )
+            (table,
+             ",".join(columns),
+             ",".join([self.valueholder] * len(values)))
         if primary_key and self.driver == "psql":
             sql += " RETURNING %s" % primary_key
-        
+
         self.execute(sql, values)
         if self.driver == "mysql":
             id_ = self.last_insert_id()
@@ -187,12 +204,14 @@ class Database:
         d[primary_key] = id_
         return id_
 
-    def update(self, table=None, d=None, primary_key="_id", exclude=[], commit=True):
+    def update(self, table=None, d=None, primary_key="_id", exclude=None, commit=True):
         """
         Update a row in a table, using table name and a dict
         Primary is the key, which should be updated with last_inserted_id
         exclude are columns that should be ignored
         """
+        if exclude is None:
+            exclude = []
         if primary_key:
             exclude.append(primary_key)  # we always exclude the primary_key
         columns = []
@@ -220,7 +239,7 @@ class Database:
         elif self.driver == "sqlite":
             return self.cursor.rowcount
         return 0
-        
+
     def select_one(self, sql=None, values=None, commit=True):
         """
         Returns a dict, or None if not found
@@ -230,7 +249,7 @@ class Database:
         if commit:
             self.commit()
         if row:
-            row = AttrDict(row) 
+            row = AttrDict(row)
         return row
 
     def select_all(self, sql=None, values=None, commit=True):
@@ -241,8 +260,9 @@ class Database:
         rows = self.cursor.fetchall()
         if commit:
             self.commit()
-        for ix in range(0, len(rows)):
-            rows[ix] = AttrDict(rows[ix])
+        for ix, row in enumerate(rows):
+            rows[ix] = AttrDict(row)
         return rows
+
 
 conn = None

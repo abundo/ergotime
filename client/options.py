@@ -1,38 +1,24 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
-'''
-GUI edit options
-'''
+"""
+GUI Window, edit options
 
-'''
-Copyright (c) 2013, Anders Lowinger, Abundo AB
-All rights reserved.
+Copyright (C) 2020 Anders Lowinger, anders@abundo.se
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-   * Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in the
-     documentation and/or other materials provided with the distribution.
-   * Neither the name of the <organization> nor the
-     names of its contributors may be used to endorse or promote products
-     derived from this software without specific prior written permission.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-'''
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-# import PyQt5.QtCore as QtCore
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import PyQt5.QtWidgets as QtWidgets
 from PyQt5.Qt import QFont
 
@@ -44,7 +30,7 @@ from settings import sett
 
 
 class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -55,13 +41,13 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         self.comboLoglevel.addItem("ERROR")
         self.comboLoglevel.addItem("DEBUG")
         self.comboLoglevel.addItem("CONSOLE")
-        
+
         self.comboFontSize.addItems(
-            ['6','7','8','9','10','11','12','13','14',
-             '15','16','18','20','22','24','26','28',
-             '32','36','40','44','48','54','60','66',
-             '72','80','88','96'])
-        
+            ["6", "7", "8", "9", "10", "11", "12", "13", "14",
+             "15", "16", "18", "20", "22", "24", "26", "28",
+             "32", "36", "40", "44", "48", "54", "60", "66",
+             "72", "80", "88", "96"])
+
         # Copy from settings -> GUI
 
         # ----- tab general
@@ -71,18 +57,18 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         self.txtPassword.setText("<Not displayed>")
         self.spinIdleTimeout.setValue(sett.idle_timeout)
         self.txtDatabasedir.setText(sett.database_dir)
-        self.comboLoglevel.setCurrentIndex( self.comboLoglevel.findText(sett.loglevel) )
-        
+        self.comboLoglevel.setCurrentIndex(self.comboLoglevel.findText(sett.loglevel))
+
         # ----- tab activity
         self.spinActivitySyncInterval.setValue(sett.activity_sync_interval)
-        
+
         # ----- tab report
         self.spinReportSyncInterval.setValue(sett.report_sync_interval)
-        
+
         # ----- tab network
         self.txtServerUrl.setText(sett.server_url)
         self.spinNetworkTimeout.setValue(sett.networkTimeout)
-        
+
         self.btnOk.clicked.connect(self.ok)
         self.btnCancel.clicked.connect(self.cancel)
 
@@ -90,9 +76,9 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         log.debugf(DEBUG_OPTIONS, "Saving new settings")
 
         # Copy from GUI -> settings
-        
+
         # ----- tab general
-        
+
         font = self.comboFontName.currentFont().toString().split(",")
         sett.fontName = font[0]
         sett.fontSize = self.comboFontSize.itemText(self.comboFontSize.currentIndex())
@@ -104,24 +90,24 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
 
         # ----- tab activity
         sett.activity_sync_interval = self.spinActivitySyncInterval.value()
-        
+
         # ----- tab report
         sett.report_sync_interval = self.spinReportSyncInterval.value()
-        
+
         # ----- tab network
         sett.server_url = self.txtServerUrl.text()
         sett.networkTimeout = self.spinNetworkTimeout.value()
-        
+
         sett.sync()
         self.accept()
-      
+
     def cancel(self):
         log.debugf(DEBUG_OPTIONS, "cancel, no settings saved")
         self.reject()
 
 
-if __name__ == '__main__':
-    """Module test"""
+if __name__ == "__main__":
+    # Module test
     app = createQApplication()
     win = OptionsWin()
     win.exec_()
