@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resource/config-activity.png</file>
+        <file>resource/config-general.png</file>
+        <file>resource/config-network.png</file>
+        <file>resource/config-report.png</file>
+        <file>resource/config-shortlist.png</file>
+        <file>resource/ergotime.ico</file>
+        <file>resource/ergotime.png</file>
+        <file>resource/menu-options.png</file>
+        <file>resource/tray-active.png</file>
+        <file>resource/tray-idle.png</file>
+        <file>resource/tray-inactive.png</file>
+    </qresource>
+</RCC>

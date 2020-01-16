@@ -30,6 +30,7 @@ import PyQt5.QtWidgets as QtWidgets
 
 from myglobals import *
 
+import resource
 import main
 
 

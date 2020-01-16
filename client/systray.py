@@ -35,7 +35,7 @@ class Systray(QtWidgets.QWidget):
         self.activitymgr = activitymgr
 
         self.trayicon = QtWidgets.QSystemTrayIcon()
-        self.icon = QtGui.QIcon("resource/tray-inactive.png")
+        self.icon = QtGui.QIcon(":/resource/tray-inactive.png")
         self.trayicon.setIcon(self.icon)
 
         self.noaction = QtWidgets.QAction(self)

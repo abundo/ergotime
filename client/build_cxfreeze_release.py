@@ -23,20 +23,16 @@ from cx_Freeze import setup, Executable
 import sys
 import shutil
 
-# Remove the existing folders
-shutil.rmtree("build", ignore_errors=True)
+DEST = "../../ergotime.cxfreeze"
 
-sys.path.append("d:/hack/eclipse/ergotime")
+# Remove the existing folders
+shutil.rmtree(DEST, ignore_errors=True)
+
 
 includes = ["logging.handlers", "sqlite3", "codecs"]
 includefiles = []
-excludes = []
+excludes = ["tkinter", "html", "lib2to3", "multiprocessing", "unittest", "xml", "xmlrpc"]
 packages = ["atexit"]
-
-# This is a place where the user custom code may go. You can do almost
-# whatever you want, even modify the data_files, includes and friends
-# here as long as they have the same variable name that the setup call
-# below is expecting.
 
 base = None
 if sys.platform == "win32":
@@ -49,12 +45,6 @@ GUI2Exe_Target_1 = Executable(
     base=base,
     
     targetName="ergotime.exe",
-    # compress = False,
-    # copyDependentFiles = True,
-    # copy_dependent_files = True,
-    # appendScriptToExe = False,
-    # append_script_to_exe = False,
-    # appendScriptToLibrary = False,
     icon="resource/ergotime.ico"
 )
 
@@ -63,16 +53,19 @@ GUI2Exe_Target_1 = Executable(
 setup(
     name="ErgoTime Client",
     version="1.0.1",
-    description="ErgoTime Client",
+    description="Ergotime Client",
     author="Anders Löwinger",
 
-    options={"build_exe": {"includes": includes,
-                           "include_files": includefiles,
-                           "excludes": excludes,
-                           "packages": packages,
-                           "path": sys.path,
-                           }
-               },
+    options={
+        "build_exe": {
+            "build_exe": DEST,
+            "includes": includes,
+            "include_files": includefiles,
+            "excludes": excludes,
+            "packages": packages,
+            "path": sys.path,
+        }
+    },
 
     executables=[GUI2Exe_Target_1]
 )

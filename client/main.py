@@ -324,7 +324,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.btnCurrentStart.setEnabled(state == self.timetracker.stateInactive)
         self.btnCurrentStop.setEnabled(state != self.timetracker.stateInactive)
 
-        self.setWindowIcon(QtGui.QIcon("resource/%s" % icon))
+        self.setWindowIcon(QtGui.QIcon(":/resource/%s" % icon))
 
     def _currentReportGuiChanged(self):
         """
