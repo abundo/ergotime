@@ -1,4 +1,4 @@
-basedir: '/opt/ergotime'
+basedir: '/opt/ergotime/server'
 etcdir: '/etc/ergotime'
 
 db_conf:
@@ -7,4 +7,3 @@ db_conf:
   pass: 'secret'
   name: 'ergotime'
   driver: 'psql'
-

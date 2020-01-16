@@ -18,6 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 import datetime
 
 from flask import Flask, Response, request, redirect, render_template, flash, abort
@@ -40,17 +41,14 @@ server = Flask(
     template_folder="/opt/ergotime/server/views",
 )
 server.json_encoder = CustomJSONEncoder
+
+# Generate secret_key using the following command
+#   python3 -c 'import os; print(os.urandom(24))'
 server.secret_key = "ergotime 12343432434"
 
 login_manager = LoginManager()
 login_manager.init_app(server)
 login_manager.login_view = "login"
-
-# proxy for a database of users
-#    "admin": ("Löwinger", "Anders"),
-#    "anders": ("Löwinger", "Anders"),
-#    "lise": ("Löwinger", "Liselotte"),
-#
 
 
 class User(UserMixin):

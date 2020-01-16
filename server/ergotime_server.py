@@ -33,7 +33,7 @@ with open("/etc/ergotime/ergotime.yaml", "r") as f:
 
 sys.path.insert(0, config["basedir"])
 
-from server import server
+from server.app import server
 
 # app.config["myconf"] = config
 
