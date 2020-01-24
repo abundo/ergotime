@@ -50,7 +50,7 @@ class MySettings(QtCore.QObject):
     username               = AttrTypDefault(str, getpass.getuser())
     password               = AttrTypDefault(str, "")
     idle_timeout           = AttrTypDefault(int, 600)
-    database_dir           = AttrTypDefault(str, "")      # todo userdir + ".ergotime"
+    database_dir           = AttrTypDefault(str, "")
     loglevel               = AttrTypDefault(str, "INFO")
 
     activity_sync_interval = AttrTypDefault(int, 600)

@@ -1,8 +1,9 @@
-# ergotime
+# Ergotime
 
 Server and client application for tracking worked time and generate reports.
 
 The client Supports full offline mode, with reliable two-way sync with server
+
 
 # License
 
@@ -29,10 +30,11 @@ Common for client and server
 - Visual Studio Code as IDE
 - flake8 as linter
 
+
 ## Client
 
 Developed with
-- python3
+- python3.7
 - pyqt5 for GUI
 - sqlite3 for local database
 

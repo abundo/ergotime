@@ -67,8 +67,6 @@ class QtLogHandler(logging.Handler):
 
     def emit(self, record):
         log_entry = self.format(record)
-#        now = datetime.datetime.now().strftime("%Y-%m-%db %H:%M:%S")
-#        line = "%s %s %s %s" % (now, threadname, self.levels[level], msg)
         if self.out is not None:
             self.out.appendPlainText(log_entry)
         else:
@@ -87,7 +85,7 @@ class Log(QtCore.QObject):
         super().__init__()
         self.out = None
         self.levels = ["INFO", "WARNING", "ERROR", "DEBUG", "CONSOLE"]
-        self.level = _CONSOLE    # todo, from settings
+        self.level = _CONSOLE
         self.logTrigger.connect(self.log)
         self._lines = []    # temp buffer until we have an output device
 

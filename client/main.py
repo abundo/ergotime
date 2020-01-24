@@ -511,7 +511,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
     def _getNewReport(self):
         report = Report()
         report.server_id = -1
-        report.user_id = 1      # todo, should be updated by server
+        report.user_id = 1
         report.seq = 0
         report.deleted = False
         report.updated = False

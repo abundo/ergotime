@@ -45,7 +45,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         else:
             self.report = Report()
             self.report.server_id = -1
-            self.report.user_id = 1      # todo, should be updated by server
+            self.report.user_id = 1
             self.report.seq = 0
             self.report.deleted = False
             self.report.updated = False
@@ -180,7 +180,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
             log.warning("Cannot save report, no activity selected")
             return
         self.report.activityid = activityid
-        # todo project
+        
         self.report.start = self.dtStart.dateTime().toPyDateTime().replace(microsecond=0)
         self.report.stop = self.dtStop.dateTime().toPyDateTime().replace(microsecond=0)
         self.report.comment = self.txtComment.toPlainText()
