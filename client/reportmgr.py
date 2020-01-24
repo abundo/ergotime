@@ -23,6 +23,8 @@ import datetime
 import queue
 import threading
 import random
+import requests
+from orderedattrdict import AttrDict
 
 import PyQt5.QtCore as QtCore
 
@@ -32,7 +34,6 @@ from settings import sett
 
 import util
 import lib.db as db
-import lib.network as network
 
 
 class ReportMgr(QtCore.QObject):
@@ -247,8 +248,9 @@ the trigger is configured like this
             report.updated = 0
             try:
                 url = "%s/%s" % (reportapi, report._id)
-                network.request("PUT", url=url, data=report, decode=True)
-            except network.NetworkException as err:
+                # network.request("PUT", url=url, data=report, decode=True)
+                r = requests.put(url, data=report)
+            except requests.exceptions.RequestException as err:
                 log.error("  Can't update report on server %s" % err)
                 return
 
@@ -265,11 +267,15 @@ the trigger is configured like this
             local_report._id = -1
             try:
                 url = reportapi
-                srv_data, tmp = network.request("POST", url=url, data=local_report, decode=True)
-            except network.NetworkException as err:
+                # srv_data, tmp = network.request("POST", url=url, data=local_report, decode=True)
+                r = requests.post(url, data=local_report)
+                srv_data = r.json()
+                srv_data = AttrDict(srv_data["data"])
+            except requests.exceptions.RequestException as err:
+#            except network.NetworkException as err:
                 log.error("  Can't send new report to server %s" % err)
                 return
-            local_report.server_id = srv_data["_id"]
+            local_report.server_id = srv_data._id
             local_report._id = _id
             try:
                 self.localdb.update("report", d=local_report, primary_key="_id")
@@ -291,8 +297,10 @@ the trigger is configured like this
             local_report._id = local_report.server_id
             local_report.updated = 0
             try:
-                network.request("PUT", url="%s/%s" % (reportapi, local_report._id), data=local_report)
-            except network.NetworkException as err:
+                # network.request("PUT", url="%s/%s" % (reportapi, local_report._id), data=local_report)
+                r = requests.put(url="%s/%s" % (reportapi, local_report._id), data=local_report)
+            except requests.exceptions.RequestException as err:
+#            except network.NetworkException as err:
                 log.error("  Cannot send new report to server, %s" % err)
                 return
             try:
@@ -323,10 +331,14 @@ the trigger is configured like this
         error = False
         while True and not error:
             try:
-                url = "%s/sync/%s" % (reportapi, local_max_seq)  # todo, maxage from settings
-                param = {"limit": step, "offset": offset, "maxage": 18}
-                srv_reports, tmp = network.request("GET", url=url, param=param, decode=True)
-            except network.NetworkException as err:
+                url = "%s/sync/%s" % (reportapi, local_max_seq)
+                params = {"limit": step, "offset": offset, "maxage": 18}
+                # srv_reports, tmp = network.request("GET", url=url, param=param, decode=True)
+                r = requests.get(url, params=params)
+                srv_reports = r.json()
+                srv_reports = AttrDict(srv_reports["data"])
+            except requests.exceptions.RequestException as err:
+            # except network.NetworkException as err:
                 log.error("  Can't get new/updated reports from server, %s" % err)
                 break
 
@@ -335,6 +347,8 @@ the trigger is configured like this
 
             log.debugf(DEBUG_REPORTMGR, "------------------------------- offset %db" % offset)
             for srv_report in srv_reports:
+                srv_report = AttrDict(srv_report)
+                # print("srv_report", srv_report)
                 # check if we have the report locally
                 try:
                     sql = "SELECT * FROM report WHERE server_id=?"

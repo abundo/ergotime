@@ -20,6 +20,8 @@ Todo
 
 Todo
 
+dependencies:
+- pip install requests
 
 # Development
 

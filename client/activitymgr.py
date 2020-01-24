@@ -22,6 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import queue
 import threading
 import random
+import requests
 from orderedattrdict import AttrDict
 
 import PyQt5.QtCore as QtCore
@@ -32,7 +33,6 @@ from settings import sett
 
 import util
 import lib.db as db
-import lib.network as network
 
 
 class ActivityMgr(QtCore.QObject):
@@ -148,8 +148,11 @@ class ActivityMgr(QtCore.QObject):
 
         # Get list of all activities on server
         try:
-            srv_activities, tmp = network.request("GET", "%s/api/activity" % sett.server_url, decode=True)
-        except network.NetworkException as err:
+            # srv_activities, tmp = network.request("GET", "%s/api/activity" % sett.server_url, decode=True)
+            r = requests.get("%s/api/activity" % sett.server_url)
+            srv_activities = r.json()
+            srv_activities = srv_activities["data"]
+        except requests.exceptions.RequestException as err:
             log.error("Cannot load list of activities from server %s" % err)
             return
 
