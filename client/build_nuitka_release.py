@@ -3,10 +3,11 @@
 r"""
 Build a release, standalone executable, for windows using nuitka
 
-Change directory into the client directory, and run this script
+Change directory into the ergotime\client directory, and run this script
 
 Example:
-    \pyhton3.7\python build_nuitka_release.py
+
+    \python3.7\python build_nuitka_release.py
 
 
 Copyright (C) 2020 Anders Lowinger, anders@abundo.se
@@ -25,8 +26,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import os
 import sys
-from distutils.dir_util import copy_tree
 import subprocess
 import shutil
 
@@ -38,6 +39,16 @@ DEST = "../.."
 # Remove the existing build
 shutil.rmtree("%s/ergotime.dist" % DEST, ignore_errors=True)
 
+current_path = os.path.dirname(os.path.realpath(__file__))
+parent_path = current_path.rsplit(os.path.sep)[:-1]
+parent_path = os.path.sep.join(parent_path)
+
+# Add ergotime to PYTHONPATH,  import lib.* does not work without this
+p = os.environ.get("PYTHONPATH", "")
+p = parent_path + ";" + p
+os.environ["PYTHONPATH"] = p
+print("path", p)
+
 
 def main():
     print("#" * 79)
@@ -48,7 +59,7 @@ def main():
     p = subprocess.run(cmd, check=True)
 
     cmd = []
-    cmd.append(sys.executable)
+    cmd.append(sys.executable)  # Same python intepreter as this script is started with
     cmd.append("-m")
     cmd.append("nuitka")
     cmd.append("--follow-imports")
@@ -56,9 +67,10 @@ def main():
     cmd.append("--standalone")
     cmd.append("--plugin-enable=qt-plugins")
     cmd.append("--output-dir=%s" % DEST)
-    cmd.append("--windows-icon=resource/ergotime.ico")
+    cmd.append("--windows-icon=%s\\resource\\ergotime.ico" % current_path)
     cmd.append("--assume-yes-for-downloads")
     cmd.append("--windows-disable-console")
+    cmd.append("--mingw64")
     cmd.append("ergotime.py")
 
     print("#" * 79)
@@ -75,17 +87,6 @@ def main():
         print("#" * 79)
         print("# Ok")
         print("#" * 79)
-        if 0:
-            src = "resource"
-            dst = "%s/ergotime.dist/resource" % DEST
-            print("#" * 79)
-            print("# Copying resource files")
-            print("# src %s" % src)
-            print("# dst %s" % dst)
-            print("#" * 79)
-            files = copy_tree(src, dst, )
-            for f in files:
-                print(f)
 
 
 if __name__ == "__main__":
