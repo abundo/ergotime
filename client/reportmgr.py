@@ -9,7 +9,7 @@ This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-
+x
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -272,7 +272,6 @@ the trigger is configured like this
                 srv_data = r.json()
                 srv_data = AttrDict(srv_data["data"])
             except requests.exceptions.RequestException as err:
-#            except network.NetworkException as err:
                 log.error("  Can't send new report to server %s" % err)
                 return
             local_report.server_id = srv_data._id
@@ -297,10 +296,8 @@ the trigger is configured like this
             local_report._id = local_report.server_id
             local_report.updated = 0
             try:
-                # network.request("PUT", url="%s/%s" % (reportapi, local_report._id), data=local_report)
                 r = requests.put(url="%s/%s" % (reportapi, local_report._id), data=local_report)
             except requests.exceptions.RequestException as err:
-#            except network.NetworkException as err:
                 log.error("  Cannot send new report to server, %s" % err)
                 return
             try:
@@ -333,12 +330,10 @@ the trigger is configured like this
             try:
                 url = "%s/sync/%s" % (reportapi, local_max_seq)
                 params = {"limit": step, "offset": offset, "maxage": 18}
-                # srv_reports, tmp = network.request("GET", url=url, param=param, decode=True)
                 r = requests.get(url, params=params)
                 srv_reports = r.json()
-                srv_reports = AttrDict(srv_reports["data"])
+                srv_reports = srv_reports["data"]
             except requests.exceptions.RequestException as err:
-            # except network.NetworkException as err:
                 log.error("  Can't get new/updated reports from server, %s" % err)
                 break
 
@@ -348,7 +343,6 @@ the trigger is configured like this
             log.debugf(DEBUG_REPORTMGR, "------------------------------- offset %db" % offset)
             for srv_report in srv_reports:
                 srv_report = AttrDict(srv_report)
-                # print("srv_report", srv_report)
                 # check if we have the report locally
                 try:
                     sql = "SELECT * FROM report WHERE server_id=?"
