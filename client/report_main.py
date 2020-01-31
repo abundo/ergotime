@@ -27,6 +27,7 @@ import PyQt5.QtWidgets as QtWidgets
 import report_win
 
 from myglobals import *
+import util
 from logger import log
 
 from common.report import Report
@@ -222,7 +223,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
 
 if __name__ == "__main__":
     # Module test
-    app = createQApplication()
+    app = util.createQApplication()
 
     tmp_default_date = datetime.datetime.now().date()
     win = Report_Win(default_date=tmp_default_date)

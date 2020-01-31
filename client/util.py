@@ -19,11 +19,25 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import sys
+
 from myglobals import *
 from logger import log
 from settings import sett
 
+import PyQt5.QtWidgets as QtWidgets
+
 import lib.db as db
+
+
+def createQApplication():
+    app = QtWidgets.QApplication(sys.argv)
+
+    app.setQuitOnLastWindowClosed(False)
+    app.setOrganizationName("Abundo AB")
+    app.setOrganizationDomain("abundo.se")
+    app.setApplicationName("ErgoTime")
+    return app
 
 
 def openLocalDatabase2(dbname=None):

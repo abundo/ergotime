@@ -447,7 +447,7 @@ if __name__ == "__main__":
     from PyQt5.Qt import QApplication
 
     log.setLevel(logging.DEBUG)
-    app = createQApplication()
+    app = util.createQApplication()
 
     localdb = util.openLocalDatabase2(":memory:")
 

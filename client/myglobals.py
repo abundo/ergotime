@@ -20,8 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
-import sys
-import PyQt5.QtWidgets as QtWidgets
 
 # ----------------------------------------------------------------------
 
@@ -63,13 +61,3 @@ if DEBUG_LEVEL & DEBUG_FILES:
 else:
     localDatabaseName = "ergotime.db"
 localDatabaseName = userdir + os.sep + localDatabaseName
-
-
-def createQApplication():
-    app = QtWidgets.QApplication(sys.argv)
-
-    app.setQuitOnLastWindowClosed(False)
-    app.setOrganizationName("Abundo AB")
-    app.setOrganizationDomain("abundo.se")
-    app.setApplicationName("ErgoTime")
-    return app

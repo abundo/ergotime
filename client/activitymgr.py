@@ -220,7 +220,7 @@ if __name__ == "__main__":
     import time
     from PyQt5.Qt import QApplication
 
-    app = createQApplication()
+    app = util.createQApplication()
 
     localdb = util.openLocalDatabase2(":memory:")
 

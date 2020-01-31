@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import PyQt5.QtWidgets as QtWidgets
 
+import util
 import about_win
 
 
@@ -34,7 +35,6 @@ class AboutWin(QtWidgets.QDialog, about_win.Ui_Options):
 
 if __name__ == "__main__":
     # Module test
-    from myglobals import *
-    app = createQApplication()
+    app = util.createQApplication()
     win = AboutWin()
     win.exec_()

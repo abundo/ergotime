@@ -25,6 +25,7 @@ from PyQt5.Qt import QFont
 import options_win
 
 from myglobals import *
+import util
 from logger import log
 from settings import sett
 
@@ -108,6 +109,6 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
 
 if __name__ == "__main__":
     # Module test
-    app = createQApplication()
+    app = util.createQApplication()
     win = OptionsWin()
     win.exec_()
