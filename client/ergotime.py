@@ -28,7 +28,6 @@ import traceback
 import PyQt5.QtCore as QtCore
 import PyQt5.QtWidgets as QtWidgets
 
-import resource
 import main
 
 

@@ -25,6 +25,7 @@ import datetime
 import threading
 
 import PyQt5.QtCore as QtCore
+import PyQt5.QtWidgets as QtWidgets
 
 
 class Log(QtCore.QObject):
@@ -77,10 +78,22 @@ class Log(QtCore.QObject):
         self.logTrigger.connect(self.log)
         self._lines = []    # temp buffer until we have an output device
 
+    def add_row(self, line):
+        c = self.out.rowCount()
+        self.out.setRowCount(c + 1)
+        self.out.setItem(c, 0, QtWidgets.QTableWidgetItem(line[0]))
+        self.out.setItem(c, 1, QtWidgets.QTableWidgetItem(line[1]))
+        self.out.setItem(c, 2, QtWidgets.QTableWidgetItem(line[2]))
+        self.out.setItem(c, 3, QtWidgets.QTableWidgetItem(line[3]))
+        if c > 500:
+            self.out.removeRow(0)
+        self.out.resizeColumnsToContents()
+        self.out.scrollToBottom()
+
     def setOut(self, out):
         self.out = out
         for line in self._lines:
-            self.out.appendPlainText(line)
+            self.add_row(line)
         self._lines = []
 
     def setLevel(self, level):
@@ -92,12 +105,12 @@ class Log(QtCore.QObject):
         if level <= self.level:
             now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             msg = str(msg).replace("\n", ", ")
-            line = "%s %s %s %s" % (now, threadname, self.levels[level], msg)
+            line = [now, threadname, self.levels[level], msg]
             if self.out is None:
                 self._lines.append(line)
-                print(line)
+                print(" ".join(line))
             else:
-                self.out.appendPlainText(line)
+                self.add_row(line)
 
     def info(self, msg):
         self.logTrigger.emit(self.INFO, threading.current_thread().getName(), msg)

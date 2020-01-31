@@ -73,7 +73,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
 
         self._myStatusBar = MyStatusBar(self)
 
-        log.setOut(self.txtLog)
+        log.setOut(self.log_table)
         log.info("Log started")
         sys.stdout = log
         sys.stderr = log
@@ -228,15 +228,20 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
     # ########################################################################
 
     def _initLog(self):
-        self.txtLog.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.txtLog.customContextMenuRequested.connect(self.handleLogMenu)
+        self.log_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.log_table.customContextMenuRequested.connect(self.handleLogMenu)
+        self.log_table.clear()
+        self.log_table.setColumnCount(4)
+        self.log_table.setRowCount(0)
+        self.log_table.setHorizontalHeaderLabels(["When", "Thread", "Level", "Message"])
 
     def handleLogMenu(self, pos):
         menu = QtWidgets.QMenu(self)
         clearAction = menu.addAction("Clear")
         action = menu.exec_(QtGui.QCursor.pos())
         if action == clearAction:
-            self.txtLog.clear()
+            self.log_table.clearContents()
+            self.log_table.setRowCount(0)
             log.debugf(log.DEBUG_MAINWIN, "Log cleared()")
 
     # ########################################################################
