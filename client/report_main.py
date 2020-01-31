@@ -26,7 +26,6 @@ import PyQt5.QtWidgets as QtWidgets
 
 import report_win
 
-from myglobals import *
 import util
 from logger import log
 

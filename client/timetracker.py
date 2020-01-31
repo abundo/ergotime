@@ -23,7 +23,6 @@ import datetime
 
 import PyQt5.QtCore as QtCore
 
-from myglobals import *
 from logger import log
 from settings import sett
 

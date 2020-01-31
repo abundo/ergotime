@@ -28,7 +28,6 @@ from orderedattrdict import AttrDict
 
 import PyQt5.QtCore as QtCore
 
-from myglobals import *
 from logger import log
 from settings import sett
 
@@ -234,7 +233,7 @@ the trigger is configured like this
 
 """
         reportapi = "%s/api/report" % sett.server_url
-        log.debugf(DEBUG_REPORTMGR, "Sync() Send deleted reports to server")
+        log.debugf(log.DEBUG_REPORTMGR, "Sync() Send deleted reports to server")
         try:
             sql = "SELECT * FROM report WHERE deleted=1"
             data = self.thread_db.select_all(sql)
@@ -242,7 +241,7 @@ the trigger is configured like this
             log.error("  Can't load reports marked for deletion from local database %s" % err)
             return
         for report in data:
-            log.debugf(DEBUG_REPORTMGR, "  Delete report on server %s" % report)
+            log.debugf(log.DEBUG_REPORTMGR, "  Delete report on server %s" % report)
 
             report._id = report.server_id   # use server _id
             report.updated = 0
@@ -254,7 +253,7 @@ the trigger is configured like this
                 log.error("  Can't update report on server %s" % err)
                 return
 
-        log.debugf(DEBUG_REPORTMGR, "Sync() Send new reports to server")
+        log.debugf(log.DEBUG_REPORTMGR, "Sync() Send new reports to server")
         try:
             sql = "SELECT * FROM report WHERE server_id < 0"
             data = self.thread_db.select_all(sql)
@@ -262,7 +261,7 @@ the trigger is configured like this
             log.error("  Can't load new reports from local database %s" % err)
             return
         for local_report in data:
-            log.debugf(DEBUG_REPORTMGR, "  Sending new report to server %s" % local_report)
+            log.debugf(log.DEBUG_REPORTMGR, "  Sending new report to server %s" % local_report)
             _id = local_report._id
             local_report._id = -1
             try:
@@ -284,7 +283,7 @@ the trigger is configured like this
 
         # todo: load report from server to see if it is changed first
 
-        log.debugf(DEBUG_REPORTMGR, "Sync() Send updated reports To server")
+        log.debugf(log.DEBUG_REPORTMGR, "Sync() Send updated reports To server")
         try:
             sql = "SELECT * FROM report WHERE updated != 0 AND updated IS NOT NULL"
             local_reports = self.thread_db.select_all(sql)
@@ -292,7 +291,7 @@ the trigger is configured like this
             log.error("  Cannot load updated reports from local database, %s" % err)
             return
         for local_report in local_reports:
-            log.debugf(DEBUG_REPORTMGR, "  Updating report on server %s" % local_report)
+            log.debugf(log.DEBUG_REPORTMGR, "  Updating report on server %s" % local_report)
             local_report._id = local_report.server_id
             local_report.updated = 0
             try:
@@ -306,7 +305,7 @@ the trigger is configured like this
                 log.error("  Error storing updated report in local database %s" % err)
                 return
 
-        log.debugf(DEBUG_REPORTMGR, "Sync() Get new/updated reports from server")
+        log.debugf(log.DEBUG_REPORTMGR, "Sync() Get new/updated reports from server")
 
         # first, get highest seq number from local database, anything higher than this
         # we don't have locally
@@ -329,7 +328,7 @@ the trigger is configured like this
         while True and not error:
             try:
                 url = "%s/sync/%s" % (reportapi, local_max_seq)
-                params = {"limit": step, "offset": offset, "maxage": 18}
+                params = {"limit": step, "offset": offset, "maxage": 180}
                 r = requests.get(url, params=params)
                 srv_reports = r.json()
                 srv_reports = srv_reports["data"]
@@ -340,7 +339,7 @@ the trigger is configured like this
             if len(srv_reports) < 1:
                 break   # no more data
 
-            log.debugf(DEBUG_REPORTMGR, "------------------------------- offset %db" % offset)
+            log.debugf(log.DEBUG_REPORTMGR, "------------------------------- offset %db" % offset)
             for srv_report in srv_reports:
                 srv_report = AttrDict(srv_report)
                 # check if we have the report locally
@@ -359,7 +358,7 @@ the trigger is configured like this
 
                     if srv_report.deleted:
                         # report is marked as deleted on server, remove locally
-                        log.debugf(DEBUG_REPORTMGR, "  From server, report with _id %s is deleted" % srv_report._id)
+                        log.debugf(log.DEBUG_REPORTMGR, "  From server, report with _id %s is deleted" % srv_report._id)
                         try:
                             sql = "DELETE FROM report WHERE _id=?"
                             deleted_count = self.thread_db.delete(sql, (local_report._id,))
@@ -372,7 +371,7 @@ the trigger is configured like this
 
                     else:
                         # report is updated on server, replace local copy with server report
-                        log.debugf(DEBUG_REPORTMGR, "  From server, report with _id %s is updated" % srv_report._id)
+                        log.debugf(log.DEBUG_REPORTMGR, "  From server, report with _id %s is updated" % srv_report._id)
                         srv_report.server_id = srv_report._id
                         srv_report._id = local_report._id
                         try:
@@ -386,7 +385,7 @@ the trigger is configured like this
                     if srv_report.deleted:
                         # TODO maxseqnr
                         continue    # Ignore the report, it is deleted and we dont have it locally
-                    log.debugf(DEBUG_REPORTMGR, "  From server, report with _id %s is new" % srv_report._id)
+                    log.debugf(log.DEBUG_REPORTMGR, "  From server, report with _id %s is new" % srv_report._id)
                     srv_report.server_id = srv_report._id
                     srv_report._id = -1
                     srv_report.updated = 0
@@ -418,18 +417,18 @@ the trigger is configured like this
         self.sig.emit()
 
     def runThread(self):
-        log.debugf(DEBUG_REPORTMGR, "Starting reportmgr thread")
+        log.debugf(log.DEBUG_REPORTMGR, "Starting reportmgr thread")
 
         # connect to local database, we have a separate connection in this thread
         # to simplify database operations
-        log.debugf(DEBUG_REPORTMGR, "Opening local database")
+        log.debugf(log.DEBUG_REPORTMGR, "Opening local database")
         self.thread_db = util.openLocalDatabase2()
 
         while True:
             req = self.toThreadQ.get()
-            log.debugf(DEBUG_REPORTMGR, "reportmgr, request=%s" % req)
+            log.debugf(log.DEBUG_REPORTMGR, "reportmgr, request=%s" % req)
             if req[0] == "quit":
-                log.debugf(DEBUG_REPORTMGR, "reportmgr thread stopping")
+                log.debugf(log.DEBUG_REPORTMGR, "reportmgr thread stopping")
                 return
 
             elif req[0] == "sync":
@@ -437,7 +436,7 @@ the trigger is configured like this
                 self._do_sync()
                 log.info("Sync reports with server finished")
             else:
-                log.error(DEBUG_REPORTMGR, "reportmgr thread, unknown command %s" % req[0])
+                log.error(log.DEBUG_REPORTMGR, "reportmgr thread, unknown command %s" % req[0])
 
 
 if __name__ == "__main__":

@@ -27,7 +27,6 @@ from orderedattrdict import AttrDict
 
 import PyQt5.QtCore as QtCore
 
-from myglobals import *
 from logger import log
 from settings import sett
 
@@ -106,9 +105,9 @@ class ActivityMgr(QtCore.QObject):
         return self.activities
 
     def save(self):
-        log.debugf(DEBUG_ACTIVITYMGR, "Saving activities")
+        log.debugf(log.DEBUG_ACTIVITYMGR, "Saving activities")
         for activity in self.activities:
-            log.debugf(DEBUG_ACTIVITYMGR, "Storing activity %s" % activity.name)
+            log.debugf(log.DEBUG_ACTIVITYMGR, "Storing activity %s" % activity.name)
             try:
                 self.localdb.update("activity", d=activity, primary_key="_id")
             except db.DbException as err:
@@ -169,7 +168,7 @@ class ActivityMgr(QtCore.QObject):
                     if getattr(local_activity, attr) != getattr(srv_activity, attr):
                         changes.append(attr)
                 if changes:
-                    log.debugf(DEBUG_ACTIVITYMGR, "Updating local copy of activity, changed columns %s,  %s" %
+                    log.debugf(log.DEBUG_ACTIVITYMGR, "Updating local copy of activity, changed columns %s,  %s" %
                                (changes, str(srv_activity).replace("\n", " ")))
                     local_activity.name = srv_activity["name"]
                     local_activity.server_id = srv_activity["_id"]
@@ -181,7 +180,7 @@ class ActivityMgr(QtCore.QObject):
                         return
             else:
                 # new activity
-                log.debugf(DEBUG_ACTIVITYMGR, "New activity '%s' on server, saving in local database" %
+                log.debugf(log.DEBUG_ACTIVITYMGR, "New activity '%s' on server, saving in local database" %
                            srv_activity.name)
                 srv_activity.server_id = srv_activity._id
                 srv_activity._id = -1
@@ -198,13 +197,13 @@ class ActivityMgr(QtCore.QObject):
         """
         Runs as a separate thread
         """
-        log.debugf(DEBUG_ACTIVITYMGR, "Starting activitymgr thread")
+        log.debugf(log.DEBUG_ACTIVITYMGR, "Starting activitymgr thread")
 
         while True:
             req = self.toThreadQ.get()
-            log.debugf(DEBUG_ACTIVITYMGR, "activitymgr, request=%s" % req)
+            log.debugf(log.DEBUG_ACTIVITYMGR, "activitymgr, request=%s" % req)
             if req == "quit":
-                log.debugf(DEBUG_ACTIVITYMGR, "activitymgr thread stopping")
+                log.debugf(log.DEBUG_ACTIVITYMGR, "activitymgr thread stopping")
                 return
             elif req == "sync":
                 # connect to database, we have a separate connection in this thread to

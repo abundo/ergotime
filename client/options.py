@@ -24,7 +24,6 @@ from PyQt5.Qt import QFont
 
 import options_win
 
-from myglobals import *
 import util
 from logger import log
 from settings import sett
@@ -74,7 +73,7 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         self.btnCancel.clicked.connect(self.cancel)
 
     def ok(self):
-        log.debugf(DEBUG_OPTIONS, "Saving new settings")
+        log.debugf(log.DEBUG_OPTIONS, "Saving new settings")
 
         # Copy from GUI -> settings
 
@@ -103,7 +102,7 @@ class OptionsWin(QtWidgets.QDialog, options_win.Ui_Options):
         self.accept()
 
     def cancel(self):
-        log.debugf(DEBUG_OPTIONS, "cancel, no settings saved")
+        log.debugf(log.DEBUG_OPTIONS, "cancel, no settings saved")
         self.reject()
 
 

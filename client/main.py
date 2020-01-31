@@ -30,7 +30,6 @@ from PyQt5.Qt import QFont, QGuiApplication
 import util
 import options
 
-from myglobals import *
 from logger import log
 from settings import sett
 from activitymgr import ActivityMgr
@@ -151,7 +150,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             if response != QtWidgets.QMessageBox.Yes:
                 self.timetracker.setStateInactive()
 
-        if not runFromIde:
+        if not sett.runFromIde:
             # do we have unsyncronised local changes?
             count = self.reportmgr.getUnsyncronisedCount()
             if count > 0:
@@ -174,7 +173,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         """
         save the current windows position & size in settings
         """
-        log.debugf(DEBUG_MAINWIN, "Save main window position and size")
+        log.debugf(log.DEBUG_MAINWIN, "Save main window position and size")
         sett.main_win_pos = self.pos()
         sett.main_win_size = self.size()
         sett.main_win_splitter_1 = self.splitter_1.saveState()
@@ -183,7 +182,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         """
         restore the windows current position & size from settings
         """
-        log.debugf(DEBUG_MAINWIN, "Restore main window position and size")
+        log.debugf(log.DEBUG_MAINWIN, "Restore main window position and size")
         self.move(sett.main_win_pos)
         self.resize(sett.main_win_size)
         self.splitter_1.restoreState(sett.main_win_splitter_1)
@@ -195,7 +194,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             widget.setPalette(self.color_white)
 
     def settingsUpdated(self):
-        log.debugf(DEBUG_MAINWIN, "settingsUpdated")
+        log.debugf(log.DEBUG_MAINWIN, "settingsUpdated")
         font = QFont(sett.fontName, int(sett.fontSize))
         self.setFont(font)
         QGuiApplication.setFont(font)
@@ -238,7 +237,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         action = menu.exec_(QtGui.QCursor.pos())
         if action == clearAction:
             self.txtLog.clear()
-            log.debugf(DEBUG_MAINWIN, "Log cleared()")
+            log.debugf(log.DEBUG_MAINWIN, "Log cleared()")
 
     # ########################################################################
     #
@@ -254,7 +253,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         """
         Called when the list of activities has changed during sync with the server
         """
-        log.debugf(DEBUG_MAINWIN, "main/activityListUpdated()")
+        log.debugf(log.DEBUG_MAINWIN, "main/activityListUpdated()")
         alist = self.activitymgr.getList()
         self.comboCurrentActivity.clear()
         for activity in alist:

@@ -23,55 +23,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import datetime
 import threading
-import logging
 
 import PyQt5.QtCore as QtCore
-
-from myglobals import *
-from lib.log import *
-
-
-_INFO = 0
-_WARNING = 1
-_ERROR = 2
-_DEBUG = 3
-_CONSOLE = 4
-
-INFO = logging.INFO
-WARNING = logging.WARNING
-ERROR = logging.ERROR
-DEBUG = logging.DEBUG
-
-level_dict = {"nfo": logging.INFO,
-              "warning": logging.WARNING,
-              "error": logging.ERROR,
-              "debug": logging.DEBUG}
-
-
-# class QtLogHandler(logging.StreamHandler):
-class QtLogHandler(logging.Handler):
-    """
-    Custom logging.Handler that outputs logging to a QT widget
-    """
-    def __init__(self):
-        super().__init__(self)
-        self.out = None
-        self._lines = []    # temp buffer until we have an output device
-        self._qtwidget = None
-
-    def setQtwidget(self, qtwidget):
-        self._qtwidget = qtwidget
-        for line in self._lines:
-            self._qtwidget.appendPlainText(line)
-        self._lines = []
-
-    def emit(self, record):
-        log_entry = self.format(record)
-        if self.out is not None:
-            self.out.appendPlainText(log_entry)
-        else:
-            self._lines.append(log_entry)
-            print(log_entry)
 
 
 class Log(QtCore.QObject):
@@ -79,13 +32,48 @@ class Log(QtCore.QObject):
     Log handler. Uses signals to be thread safe
     Modeled so stdout/stderr can be directed to this class
     """
+
+    # Possible debug subsystems
+    DEBUG_FILES             = 1 << 0
+    DEBUG_SETTINGS          = 1 << 1
+    DEBUG_ACTIVITYMGR       = 1 << 3
+    DEBUG_REPORTMGR         = 1 << 4
+    DEBUG_MAINWIN           = 1 << 5
+    DEBUG_OPTIONS           = 1 << 6
+    DEBUG_SYSTRAY           = 1 << 7
+
+    # Setup debug bitmask
+    DEBUG_LEVEL = 0
+    DEBUG_LEVEL |= DEBUG_FILES       * 0
+    DEBUG_LEVEL |= DEBUG_SETTINGS    * 0
+    DEBUG_LEVEL |= DEBUG_ACTIVITYMGR * 1
+    DEBUG_LEVEL |= DEBUG_REPORTMGR   * 1
+    DEBUG_LEVEL |= DEBUG_MAINWIN     * 1
+    DEBUG_LEVEL |= DEBUG_OPTIONS     * 1
+    DEBUG_LEVEL |= DEBUG_SYSTRAY     * 1
+
     logTrigger = QtCore.pyqtSignal(int, str, str)
+
+    INFO = 0
+    WARNING = 1
+    ERROR = 2
+    DEBUG = 3
+    CONSOLE = 4
+
+    # Map from string to log level
+    level_dict = {
+        "info": INFO,
+        "warning": WARNING,
+        "error": ERROR,
+        "debug": DEBUG,
+        "console": CONSOLE,
+    }
 
     def __init__(self):
         super().__init__()
-        self.out = None
+        self.out = None     # QT Widget for log output
         self.levels = ["INFO", "WARNING", "ERROR", "DEBUG", "CONSOLE"]
-        self.level = _CONSOLE
+        self.level = self.CONSOLE
         self.logTrigger.connect(self.log)
         self._lines = []    # temp buffer until we have an output device
 
@@ -96,11 +84,14 @@ class Log(QtCore.QObject):
         self._lines = []
 
     def setLevel(self, level):
+        if isinstance(level, str):
+            level = self.level_dict[level]
         self.level = level
 
     def log(self, level, threadname, msg):
         if level <= self.level:
-            now = datetime.datetime.now().strftime("%Y-%m-%db %H:%M:%S")
+            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            msg = str(msg).replace("\n", ", ")
             line = "%s %s %s %s" % (now, threadname, self.levels[level], msg)
             if self.out is None:
                 self._lines.append(line)
@@ -109,28 +100,28 @@ class Log(QtCore.QObject):
                 self.out.appendPlainText(line)
 
     def info(self, msg):
-        self.logTrigger.emit(_INFO, threading.current_thread().getName(), msg)
+        self.logTrigger.emit(self.INFO, threading.current_thread().getName(), msg)
 
     def warning(self, msg):
-        self.logTrigger.emit(_WARNING, threading.current_thread().getName(), msg)
+        self.logTrigger.emit(self.WARNING, threading.current_thread().getName(), msg)
 
     def error(self, msg):
-        self.logTrigger.emit(_ERROR, threading.current_thread().getName(), msg)
+        self.logTrigger.emit(self.ERROR, threading.current_thread().getName(), msg)
 
     def debug(self, msg):
-        self.logTrigger.emit(_DEBUG, threading.current_thread().getName(), msg)
+        self.logTrigger.emit(self.DEBUG, threading.current_thread().getName(), msg)
 
     def debugf(self, mask, msg):
         """
         Show debug message, if debug for this type is enabled
         """
-        if DEBUG_LEVEL & mask:
-            self.logTrigger.emit(_DEBUG, threading.current_thread().getName(), msg)
+        if self.DEBUG_LEVEL & mask:
+            self.logTrigger.emit(self.DEBUG, threading.current_thread().getName(), msg)
 
     def write(self, msg):
         msg = msg.strip()
         if msg:
-            self.logTrigger.emit(_CONSOLE, threading.current_thread().getName(), msg.strip())
+            self.logTrigger.emit(self.CONSOLE, threading.current_thread().getName(), msg.strip())
 
     def flush(self):
         # this is defined so we can redirect stdout/stderr here without warnings
@@ -138,48 +129,3 @@ class Log(QtCore.QObject):
 
 
 log = Log()
-
-
-def setLevel(level):
-    if isinstance(level, str):
-        level = level_dict[level]
-    logger.setLevel(level)
-
-
-def info(msg):
-    msg = str(msg).replace("\n", ", ")
-    logger.info(msg)
-
-
-def warning(msg):
-    msg = str(msg).replace("\n", ", ")
-    logger.warning(msg)
-
-
-def error(msg):
-    msg = str(msg).replace("\n", ", ")
-    logger.error(msg)
-
-
-def debug(msg):
-    try:
-        msg = str(msg).replace("\n", ", ")
-    except UnicodeDecodeError:
-        return
-    logger.debug(msg)
-
-
-formatstr = "%(asctime)s %(levelname)s %(message)s "
-loglevel = logging.INFO
-logger = logging.getLogger("ergotime")
-logger.setLevel(loglevel)
-
-# remove all handlers
-for hdlr in logger.handlers:
-    logger.removeHandler(hdlr)
-
-consolehandler = logging.StreamHandler()
-
-formatter = logging.Formatter(formatstr)
-consolehandler.setFormatter(formatter)
-logger.addHandler(consolehandler)

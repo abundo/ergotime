@@ -22,7 +22,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import PyQt5.QtGui as QtGui
 import PyQt5.QtWidgets as QtWidgets
 
-from myglobals import *
 from logger import log
 
 
@@ -76,10 +75,10 @@ class Systray(QtWidgets.QWidget):
         self.trayicon.show()
 
     def setAction(self):
-        log.debugf(DEBUG_SYSTRAY, "setAction()")
+        log.debugf(log.DEBUG_SYSTRAY, "setAction()")
 
     def setNoAction(self):
-        log.debugf(DEBUG_SYSTRAY, "setNoAction")
+        log.debugf(log.DEBUG_SYSTRAY, "setNoAction")
 
     def updateCheckedAction(self):
         currentactivityid = -1

@@ -19,13 +19,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import os
 import getpass
 import inspect
 
 import PyQt5.QtCore as QtCore
 from PyQt5.Qt import QByteArray
 
-from myglobals import *
 from logger import log
 
 NO_DEFAULT = QtCore.QObject()
@@ -60,7 +60,9 @@ class MySettings(QtCore.QObject):
     server_url             = AttrTypDefault(str, "http://ergotime.int.abundo.se")
     networkTimeout         = AttrTypDefault(int, 60)
 
-    localDatabaseName      = localDatabaseName
+    userdir                = AttrTypDefault(str, os.path.expanduser("~") + os.sep + ".ergotime")
+    userconffile           = AttrTypDefault(str, "")
+    localDatabaseName      = AttrTypDefault(str, "ergotime.db")
 
     def _attriter(self):
         """
@@ -73,9 +75,19 @@ class MySettings(QtCore.QObject):
     def __init__(self):
         super().__init__()
         self._settings = {}
+
+        # Create datadir in the users home directory
+        if not os.path.exists(self.userdir.default):
+            os.mkdir(self.userdir.default)
+        userconffile = self.userdir.default + os.sep + "ergotime.ini"
+
+        if log.DEBUG_LEVEL & log.DEBUG_FILES:
+            self.localDatabaseName.default = "ergotime-devel.db"
+        self.localDatabaseName.default = self.userdir.default + os.sep + self.localDatabaseName.default
+
         self.qsettings = QtCore.QSettings(userconffile, QtCore.QSettings.IniFormat)
         self.qsettings.setFallbacksEnabled(False)
-        log.debugf(DEBUG_SETTINGS, "Settings stored in file %s" % self.qsettings.fileName())
+        log.debugf(log.DEBUG_SETTINGS, "Settings stored in file %s" % self.qsettings.fileName())
 
         # Go through all supperted settings and load them
         # This creates instance variables overriding the class variables
@@ -88,13 +100,15 @@ class MySettings(QtCore.QObject):
                 value = self.qsettings.value(attr, atd.default, type=atd.type)
             else:
                 value = self.qsettings.value(attr, type=atd.type)
-            log.debugf(DEBUG_SETTINGS, "Loaded setting %s = %s" % (attr, value))
+            log.debugf(log.DEBUG_SETTINGS, "Loaded setting %s = %s" % (attr, value))
             object.__setattr__(self, attr, value)
+
+        self.runFromIde = "runFromIde" in os.environ     # todo find out automatically if we are running from the IDE
 
     def __setattr__(self, attr, value):
         try:
             atd = self._settings[attr]
-            log.debugf(DEBUG_SETTINGS, "Storing setting %s,%s = %s" % (attr, str(atd.type), value))
+            log.debugf(log.DEBUG_SETTINGS, "Storing setting %s,%s = %s" % (attr, str(atd.type), value))
             if value != atd.default or value != getattr(self, attr):    # only write non-default values
                 self.qsettings.setValue(attr, value)
                 object.__setattr__(self, attr, value)

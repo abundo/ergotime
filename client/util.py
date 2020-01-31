@@ -21,11 +21,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import sys
 
-from myglobals import *
+import PyQt5.QtWidgets as QtWidgets
+
 from logger import log
 from settings import sett
-
-import PyQt5.QtWidgets as QtWidgets
+import resource
 
 import lib.db as db
 
