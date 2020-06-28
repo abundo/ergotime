@@ -54,9 +54,9 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     QtWidgets.QMessageBox.critical(
         None, "Error",
         f"<html>A critical error has occured.<br/> "
-        "<b>{error}</b><br/><br/>"
-        "It occurred at <b>line {line}</b> of file <b>{filename}</b>.<br/>"
-        "</html>"
+        f"<b>{error}</b><br/><br/>"
+        f"It occurred at <b>line {line}</b> of file <b>{filename}</b>.<br/>"
+        f"</html>"
     )
 
     print("Closed due to an error. This is the full error report:")
