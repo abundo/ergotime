@@ -125,11 +125,13 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
 
     def settingsDialog(self):
         options1 = options.OptionsWin(self)
+        options1.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         options1.exec_()
 
     def about(self):
         import about
         about = about.AboutWin(self)
+        about.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         about.exec_()
 
     def closeEvent(self, event):
@@ -541,6 +543,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
                                    activityMgr=self.activitymgr,
                                    reportMgr=self.reportmgr,
                                    default_date=d)
+        a.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         a.exec_()
 
     def report_edit(self):
@@ -559,6 +562,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
                                                activityMgr=self.activitymgr,
                                                reportMgr=self.reportmgr,
                                                report=report)
+                    a.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
                     a.exec_()
                     return
                 log.error(f"Can't find report {_id} in local database")
