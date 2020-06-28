@@ -184,7 +184,7 @@ class Database:
         for colname in set(d.keys()) - set(exclude):
             columns.append(colname)
             values.append(d[colname])
-        tmp_column = ",".join(columns)
+        tmp_columns = ",".join(columns)
         tmp_values = ",".join([self.valueholder] * len(values))
         sql = f"INSERT into {table} ({tmp_columns}) VALUES ({tmp_values})"
         if primary_key and self.driver == "psql":
