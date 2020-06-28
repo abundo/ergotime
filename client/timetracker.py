@@ -153,9 +153,8 @@ class Timetracker(QtCore.QObject):
             seconds = 0
         if seconds >= 86400:
             seconds = 85399
-        hour, remainder = int(seconds // 3600), int(seconds % 3600)
-        minute, second = int(remainder // 60), int(remainder % 60)
-        return datetime.time(hour, minute, second)
+        tmp = datetime.datetime(2000, 1, 1) + datetime.timedelta(seconds=seconds)
+        return tmp.time()
 
     def _update(self):
         """
