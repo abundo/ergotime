@@ -166,9 +166,6 @@
                 </item>
                </layout>
               </item>
-              <item row="3" column="1">
-               <layout class="QHBoxLayout" name="horizontalLayout_2"/>
-              </item>
              </layout>
             </item>
            </layout>
