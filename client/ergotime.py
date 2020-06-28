@@ -23,6 +23,7 @@ import os
 import os.path
 
 import sys
+sys.dont_write_bytecode = True
 import traceback
 
 import PyQt5.QtCore as QtCore
