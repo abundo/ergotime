@@ -65,7 +65,7 @@ class ActivityMgr(QtCore.QObject):
                     self.periodicsync_timer.cancel()
                     self.periodicsync_timer = None
             if self.periodicsync_timer is None:
-                log.debug("ActivityMgr starting autosync timer, interval %s" % sett.activity_sync_interval)
+                log.debug(f"ActivityMgr starting autosync timer, interval {sett.activity_sync_interval}")
                 self._start_periodicsync_timer()
         else:
             if self.periodicsync_timer:
@@ -78,7 +78,7 @@ class ActivityMgr(QtCore.QObject):
         if jitter < 1:
             jitter = 1
         interval = sett.activity_sync_interval + random.randint(-jitter, jitter)
-        log.debug("ActivityMgr interval %s jitter %s" % (interval, jitter))
+        log.debug(f"ActivityMgr interval {interval} jitter {jitter}")
         self.periodicsync_timer = threading.Timer(interval, self.periodic_sync)
         self.periodicsync_timer.daemon = True
         self.periodicsync_timer.setName("ActivityMgr.Timer")
@@ -107,11 +107,11 @@ class ActivityMgr(QtCore.QObject):
     def save(self):
         log.debugf(log.DEBUG_ACTIVITYMGR, "Saving activities")
         for activity in self.activities:
-            log.debugf(log.DEBUG_ACTIVITYMGR, "Storing activity %s" % activity.name)
+            log.debugf(log.DEBUG_ACTIVITYMGR, f"Storing activity {activity.name}")
             try:
                 self.localdb.update("activity", d=activity, primary_key="_id")
             except db.DbException as err:
-                log.error("Cant save activity in local database, %s" % err)
+                log.error(f"Cant save activity in local database, {err}")
 
     def _loadList(self):
         sql = "SELECT * FROM activity ORDER BY active desc,name"
@@ -147,17 +147,16 @@ class ActivityMgr(QtCore.QObject):
 
         # Get list of all activities on server
         try:
-            # srv_activities, tmp = network.request("GET", "%s/api/activity" % sett.server_url, decode=True)
-            r = requests.get("%s/api/activity" % sett.server_url)
+            r = requests.get(f"{sett.server_url}/api/activity")
             srv_activities = r.json()
             srv_activities = srv_activities["data"]
         except requests.exceptions.RequestException as err:
-            log.error("Cannot load list of activities from server %s" % err)
+            log.error(f"Cannot load list of activities from server {err}")
             return
 
         for srv_activity in srv_activities:
             srv_activity = AttrDict(srv_activity)
-            log.debug("Server activity %s" % srv_activity)
+            log.debug(f"Server activity {srv_activity}")
 
             sql = "SELECT * FROM activity WHERE server_id=?"
             local_activity = self.localdb.select_one(sql, (srv_activity["_id"],))
@@ -168,26 +167,25 @@ class ActivityMgr(QtCore.QObject):
                     if getattr(local_activity, attr) != getattr(srv_activity, attr):
                         changes.append(attr)
                 if changes:
-                    log.debugf(log.DEBUG_ACTIVITYMGR, "Updating local copy of activity, changed columns %s,  %s" %
-                               (changes, str(srv_activity).replace("\n", " ")))
+                    tmp = str(srv_activity).replace("\n", " ")
+                    log.debugf(log.DEBUG_ACTIVITYMGR, f"Updating local copy of activity, changed columns {changes}, {tmp}")
                     local_activity.name = srv_activity["name"]
                     local_activity.server_id = srv_activity["_id"]
                     local_activity.active = srv_activity["active"]
                     try:
                         self.localdb.update("activity", d=local_activity, primary_key="_id")
                     except db.DbException as err:
-                        log.error("Cannot update local activity %s" % err)
+                        log.error(f"Cannot update local activity {err}")
                         return
             else:
                 # new activity
-                log.debugf(log.DEBUG_ACTIVITYMGR, "New activity '%s' on server, saving in local database" %
-                           srv_activity.name)
+                log.debugf(log.DEBUG_ACTIVITYMGR, f"New activity '{srv_activity.name}' on server, saving in local database")
                 srv_activity.server_id = srv_activity._id
                 srv_activity._id = -1
                 try:
                     self.localdb.insert("activity", d=srv_activity, primary_key="_id")
                 except db.DbException as err:
-                    log.error("Cannot save new activity in local database %s" % err)
+                    log.error(f"Cannot save new activity in local database {err}")
                     return
 
         self._loadList()
@@ -201,7 +199,7 @@ class ActivityMgr(QtCore.QObject):
 
         while True:
             req = self.toThreadQ.get()
-            log.debugf(log.DEBUG_ACTIVITYMGR, "activitymgr, request=%s" % req)
+            log.debugf(log.DEBUG_ACTIVITYMGR, f"activitymgr, request={req}")
             if req == "quit":
                 log.debugf(log.DEBUG_ACTIVITYMGR, "activitymgr thread stopping")
                 return
@@ -211,7 +209,7 @@ class ActivityMgr(QtCore.QObject):
                 self.localdb = util.openLocalDatabase2()
                 self._do_sync()
             else:
-                log.error("activitymgr thread, unknown command %s" % req)
+                log.error(f"activitymgr thread, unknown command {req}")
 
 
 if __name__ == "__main__":

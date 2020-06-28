@@ -45,7 +45,7 @@ class Database:
         self.dbexception = DbException
 
         if self.driver not in ["psql", "mysql", "sqlite"]:
-            raise ValueError("Driver type '%s' not implemented" % self.driver)
+            raise ValueError(f"Driver type {self.driver} not implemented")
 
         self.valueholder = "%s"
         if self.driver == "sqlite":
@@ -184,10 +184,9 @@ class Database:
         for colname in set(d.keys()) - set(exclude):
             columns.append(colname)
             values.append(d[colname])
-        sql = "INSERT into %s (%s) VALUES (%s)" %\
-            (table,
-             ",".join(columns),
-             ",".join([self.valueholder] * len(values)))
+        tmp_column = ",".join(columns)
+        tmp_values = ",".join([self.valueholder] * len(values))
+        sql = f"INSERT into {table} ({tmp_columns}) VALUES ({tmp_values})"
         if primary_key and self.driver == "psql":
             sql += " RETURNING %s" % primary_key
 
@@ -220,9 +219,9 @@ class Database:
             columns.append(colname)
             values.append(d[colname])
         fstr = "{!s}=%s" % self.valueholder
-        sql = "UPDATE %s SET %s" %\
-            (table, ",".join(fstr.format(colname) for colname in columns))
-        sql += " WHERE %s=%s" % (primary_key, self.valueholder)
+        tmp_colname = ",".join(fstr.format(colname) for colname in columns)
+        sql = f"UPDATE {table} SET {tmp_colname}"
+        sql += f" WHERE {primary_key}={self.valueholder}"
         values.append(d[primary_key])
         self.execute(sql, values)
         if commit:

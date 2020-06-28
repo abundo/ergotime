@@ -139,5 +139,5 @@ if __name__ == "__main__":
     import time
     while True:
         idle = get_idle()
-        print("Idle:", idle)
+        print(f"Idle: {idle}")
         time.sleep(1)

@@ -37,7 +37,7 @@ DEST = "../.."
 
 
 # Remove the existing build
-shutil.rmtree("%s/ergotime.dist" % DEST, ignore_errors=True)
+shutil.rmtree(f"{DEST}/ergotime.dist", ignore_errors=True)
 
 current_path = os.path.dirname(os.path.realpath(__file__))
 parent_path = current_path.rsplit(os.path.sep)[:-1]
@@ -45,10 +45,13 @@ parent_path = os.path.sep.join(parent_path)
 
 # Add ergotime to PYTHONPATH,  import lib.* does not work without this
 p = os.environ.get("PYTHONPATH", "")
-p = parent_path + ";" + p
-os.environ["PYTHONPATH"] = p
+if p:
+    p = parent_path + ";" + p
+    os.environ["PYTHONPATH"] = p
 print("path", p)
 
+# Todo, check if we can find g++
+# PATH=c:\MinGW64\mingw64\bin;%PATH%
 
 def main():
     print("#" * 79)
@@ -66,8 +69,8 @@ def main():
     cmd.append("--remove-output")
     cmd.append("--standalone")
     cmd.append("--plugin-enable=qt-plugins")
-    cmd.append("--output-dir=%s" % DEST)
-    cmd.append("--windows-icon=%s\\resource\\ergotime.ico" % current_path)
+    cmd.append(f"--output-dir={DEST}")
+    cmd.append(f"--windows-icon={current_path}\\resource\\ergotime.ico")
     cmd.append("--assume-yes-for-downloads")
     cmd.append("--windows-disable-console")
     cmd.append("--mingw64")

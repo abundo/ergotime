@@ -90,7 +90,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         # Copy report->gui
         s = ""
         if self.report.server_id >= 0:
-            s += "on server(%s) " % self.report.server_id
+            s += f"on server({self.report.server_id}) "
         if self.report.updated:
             s += "locally updated "
         if self.report.deleted:

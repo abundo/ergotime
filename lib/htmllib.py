@@ -26,7 +26,7 @@ class Htmllib:
         self.db = db
 
     def getUserCombo(self, name="userid", selected=None):
-        s = "<select name='%s'>" % name
+        s = f"<select name='{name}'>"
         try:
             sql = "SELECT * FROM users ORDER BY name"
             data = self.db.select_all(sql)
@@ -35,19 +35,19 @@ class Htmllib:
                     tmp = " selected"
                 else:
                     tmp = ""
-                s += "<option value='%s'%s>%s</option>" % (user._id, tmp, user.name)
+                s += f"<option value='{user._id}'{tmp}>{user.name}</option>"
         except self.db.exception:
             pass
         s += "</select>"
         return s
 
     def getActivityCombo(self, name="activity", selected=None, additional=None):
-        s = "<select name='%s'>" % name
+        s = f"<select name='{name}'>"
         if selected:
             selected = str(selected)
         if additional:
             for activity in additional:
-                s += "  <option value='%s'>%s</option>" % (activity[0], activity[1])
+                s += f"  <option value='{activity[0]}'>{activity[1]}</option>"
         try:
             sql = "SELECT * FROM activity ORDER BY name"
             data = self.db.select_all(sql)
@@ -56,14 +56,14 @@ class Htmllib:
                     tmp = " selected"
                 else:
                     tmp = ""
-                s += "  <option value='%s'%s>%s</option>" % (activity._id, tmp, activity.name)
+                s += f"  <option value='{activity._id}'{tmp}>{activity.name}</option>"
         except self.db.exception:
             pass
         s += "</select>"
         return s
 
     def checkBox(self, name="checkbox", value=None):
-        s = "<input type='checkbox' name=%s" % name
+        s = f"<input type='checkbox' name={name}"
         if value is not None and value != "":
             s += " checked"
         s += ">"

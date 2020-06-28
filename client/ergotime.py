@@ -49,14 +49,14 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 
     filename, line, dummy1, dummy2 = traceback.extract_tb(exc_traceback).pop()
     filename = os.path.basename(filename)
-    error = "%s: %s" % (exc_type.__name__, exc_value)
+    error = f"{exc_type.__name__}: {exc_value}"
 
     QtWidgets.QMessageBox.critical(
         None, "Error",
-        "<html>A critical error has occured.<br/> "
-        + "<b>%s</b><br/><br/>" % error
-        + "It occurred at <b>line %d</b> of file <b>%s</b>.<br/>" % (line, filename)
-        + "</html>"
+        f"<html>A critical error has occured.<br/> "
+        "<b>{error}</b><br/><br/>"
+        "It occurred at <b>line {line}</b> of file <b>{filename}</b>.<br/>"
+        "</html>"
     )
 
     print("Closed due to an error. This is the full error report:")
@@ -87,7 +87,7 @@ def main_():
         # Restore stdout/stderr so we can see the error
         sys.stdout = old_stdout
         sys.stderr = old_stderr
-        print("Error: %s" % err)
+        print(f"Error: {err}")
 
 
 if __name__ == "__main__":

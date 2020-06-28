@@ -87,7 +87,7 @@ class MySettings(QtCore.QObject):
 
         self.qsettings = QtCore.QSettings(userconffile, QtCore.QSettings.IniFormat)
         self.qsettings.setFallbacksEnabled(False)
-        log.debugf(log.DEBUG_SETTINGS, "Settings stored in file %s" % self.qsettings.fileName())
+        log.debugf(log.DEBUG_SETTINGS, f"Settings stored in file {self.qsettings.fileName()}")
 
         # Go through all supperted settings and load them
         # This creates instance variables overriding the class variables
@@ -100,7 +100,7 @@ class MySettings(QtCore.QObject):
                 value = self.qsettings.value(attr, atd.default, type=atd.type)
             else:
                 value = self.qsettings.value(attr, type=atd.type)
-            log.debugf(log.DEBUG_SETTINGS, "Loaded setting %s = %s" % (attr, value))
+            log.debugf(log.DEBUG_SETTINGS, f"Loaded setting {attr} = {value}")
             object.__setattr__(self, attr, value)
 
         self.runFromIde = "runFromIde" in os.environ     # todo find out automatically if we are running from the IDE
@@ -108,7 +108,7 @@ class MySettings(QtCore.QObject):
     def __setattr__(self, attr, value):
         try:
             atd = self._settings[attr]
-            log.debugf(log.DEBUG_SETTINGS, "Storing setting %s,%s = %s" % (attr, str(atd.type), value))
+            log.debugf(log.DEBUG_SETTINGS, f"Storing setting {attr},{atd.type} = {value}")
             if value != atd.default or value != getattr(self, attr):    # only write non-default values
                 self.qsettings.setValue(attr, value)
                 object.__setattr__(self, attr, value)

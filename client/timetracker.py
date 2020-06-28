@@ -98,7 +98,7 @@ class Timetracker(QtCore.QObject):
         elif self.state == self.stateIdle:
             log.error("Incorrect state change, inactive->idle")
         else:
-            log.error("Incorrect state %s" % self.state)
+            log.error(f"Incorrect state {self.state}")
 
     def setStateActive(self, report=None):
         """
@@ -120,7 +120,7 @@ class Timetracker(QtCore.QObject):
         elif self.state == self.stateIdle:
             log.error("Incorrect state change, active->idle")
         else:
-            log.error("Incorrect state %s" % self.state)
+            log.error(f"Incorrect state {self.state}")
 
     def setStateIdle(self):
         """
@@ -141,10 +141,10 @@ class Timetracker(QtCore.QObject):
         elif self.state == self.stateIdle:
             log.error("Incorrect state change, idle->idle")
         else:
-            log.error("Incorrect state %s" % self.state)
+            log.error(f"Incorrect state {self.state}")
 
     def _saveReport(self, subtract_seconds=0):
-        log.debug("Saving report %s" % self.report)
+        log.debug(f"Saving report {self.report}")
         self.report.stop = datetime.datetime.now().replace(microsecond=0) - datetime.timedelta(seconds=subtract_seconds)
         self.reportmgr.store(self.report)
 

@@ -116,4 +116,4 @@ def yaml_load(filename):
             data = ordered_load(f, yaml.SafeLoader)
             return data
         except yaml.YAMLError as err:
-            raise UtilException("Cannot load YAML file %s, err: %s" % (filename, err))
+            raise UtilException(f"Cannot load YAML file {filename}, err: {err}"

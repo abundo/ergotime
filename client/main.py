@@ -154,7 +154,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             # do we have unsyncronised local changes?
             count = self.reportmgr.getUnsyncronisedCount()
             if count > 0:
-                msgBox.setText("There are %s reports in local database that needs to be syncronized with the server. Do you want to do this now?" % count)
+                msgBox.setText(f"There are {count} reports in local database that needs to be syncronized with the server. Do you want to do this now?")
                 msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                 msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
                 response = msgBox.exec_()
@@ -303,7 +303,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         Called periodically by timetracker so GUI can be updated
         """
         self.timeCurrentLen.setTime(status.length)
-        self._myStatusBar.idle = "Idle %s" % status.idle
+        self._myStatusBar.idle = f"Idle {status.idle}"
 
     def _currentReportStateChanged(self, state):
         """
@@ -328,7 +328,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self.btnCurrentStart.setEnabled(state == self.timetracker.stateInactive)
         self.btnCurrentStop.setEnabled(state != self.timetracker.stateInactive)
 
-        self.setWindowIcon(QtGui.QIcon(":/resource/%s" % icon))
+        self.setWindowIcon(QtGui.QIcon(f":/resource/{icon}"))
 
     def _currentReportGuiChanged(self):
         """
@@ -433,7 +433,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
             if r.start is not None and r.stop is not None:
                 l = (r.stop - r.start).total_seconds() / 60
                 totalLen += l
-                tmp = "%02d:%02d" % (l // 60, l % 60)
+                tmp = f"{l//60:.0f}:{l%60:02.0f}"
             else:
                 tmp = "None"
             self._reportsTableSet(t, row, col, tmp)
@@ -441,7 +441,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
 
             s = ""
             if r.server_id is not None and r.server_id > -1:
-                s += "on server(%s)" % r.server_id
+                s += f"on server({r.server_id})"
             if r.updated:
                 s += " updated"
             if r.deleted:
@@ -468,7 +468,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
         self._reportsTableSet(t, row, col, "")
         col += 1
 
-        self._reportsTableSet(t, row, col, "%02d:%02d" % (totalLen // 60, totalLen % 60))
+        self._reportsTableSet(t, row, col, f"{totalLen // 60:.0f}:{totalLen % 60:02.0f}")
         col += 1
 
         self._reportsTableSet(t, row, col, "")
@@ -561,7 +561,7 @@ class MainWin(QtWidgets.QMainWindow, main_win.Ui_Main):
                                                report=report)
                     a.exec_()
                     return
-                log.error("Can't find report %s in local database" % _id)
+                log.error(f"Can't find report {_id} in local database")
 
     def report_delete(self):
         """
