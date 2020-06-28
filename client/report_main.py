@@ -52,7 +52,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
             self.report.modified = datetime.datetime(1990, 1, 1)
             now = datetime.datetime.now().replace(second=0, microsecond=0).time()
             self.report.start = datetime.datetime.combine(default_date, now)
-            self.report.stop = self.report.start + datetime.timedelta(seconds=30*60)
+            self.report.stop = self.report.start + datetime.timedelta(seconds=30 * 60)
 
         # toolbar
         self.btnSave.clicked.connect(self.save)
@@ -167,8 +167,8 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         if stop < start:
             # stop can't be before start
             self.dtStop.setDateTime(self.dtStart.dateTime())
-        l = (stop - start).total_seconds() / 60
-        self.timeLen.setTime(QtCore.QTime(l // 60, l % 60))
+        length = (stop - start).total_seconds() / 60
+        self.timeLen.setTime(QtCore.QTime(length // 60, length % 60))
 
     def save(self):
         if self.report._id >= 0:

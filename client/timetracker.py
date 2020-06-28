@@ -49,10 +49,10 @@ class Timetracker(QtCore.QObject):
     when state is active, a _timer periodically checks if user has been idle
     """
 
-    stateStartup  = 1   # Only used during program startup
+    stateStartup = 1   # Only used during program startup
     stateInactive = 2
-    stateActive   = 3
-    stateIdle     = 4   # idle state detected (user has been inactive), transitive state goes to inactive when handled
+    stateActive = 3
+    stateIdle = 4   # idle state detected (user has been inactive), transitive state goes to inactive when handled
 
     stateSignal = QtCore.pyqtSignal(int)
     activeUpdated = QtCore.pyqtSignal(Status)   # signals update to the active state, for GUI to track
