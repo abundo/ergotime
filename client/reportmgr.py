@@ -276,7 +276,7 @@ the trigger is configured like this
             local_report.server_id = srv_data._id
             local_report._id = _id
             try:
-                self.localdb.update("report", d=local_report, primary_key="_id")
+                self.thread_db.update("report", d=local_report, primary_key="_id")
             except db.DbException as err:
                 log.error(f"  Can't update report in local database {err}")
                 return
@@ -300,7 +300,7 @@ the trigger is configured like this
                 log.error(f"  Cannot send new report to server, {err}")
                 return
             try:
-                self.localdb.update("report", d=local_report, primary_key="_id")
+                self.thread_db.update("report", d=local_report, primary_key="_id")
             except db.DbException as err:
                 log.error(f"  Error storing updated report in local database {err}")
                 return
