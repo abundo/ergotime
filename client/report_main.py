@@ -167,7 +167,7 @@ class Report_Win(QtWidgets.QDialog, report_win.Ui_Report):
         if stop < start:
             # stop can't be before start
             self.dtStop.setDateTime(self.dtStart.dateTime())
-        length = (stop - start).total_seconds() / 60
+        length = int((stop - start).total_seconds() / 60)
         self.timeLen.setTime(QtCore.QTime(length // 60, length % 60))
 
     def save(self):
