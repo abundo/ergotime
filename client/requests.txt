@@ -1,0 +1,3 @@
+orderedattrdict
+requests
+pyqt5
