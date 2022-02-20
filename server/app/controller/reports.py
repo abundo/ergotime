@@ -325,8 +325,8 @@ def addActivity(activity=None,
 
     sql += " start>=%s AND"
     values.append(str(start.obj))
-
-    sql += " stop<=%s AND"
+    
+    sql += " start<=%s AND"
     values.append(str(stop.obj))
 
     sql += " deleted=0"
