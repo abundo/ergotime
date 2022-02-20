@@ -69,14 +69,14 @@ Debug:
  <td>&nbsp;</td>
  <td>&nbsp;</td>
  <td>&nbsp;</td>
- <td class='text-left' style='white-space: nowrap'>{{ activityDay.strTotal(includeDecimal=True) }}</td> 
+ <td class='text-center' style='white-space: nowrap'>{{ activityDay.strTotal(includeDecimal=False) }}</td> 
  <td><strong>Total for day</strong></td>
 </tr>
 
 {% endfor %}
 </table>
 <p>
-Total for period: {{ activityMonth.strTotal(includeDecimal=True) }}<br>
+Total for period: {{ activityMonth.strTotal(includeDecimal=False) }}<br>
 <p>
 <br>
 {% endfor %}
